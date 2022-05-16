@@ -211,11 +211,14 @@ class TraceManager():
                             print("-=-= Tek child: ", G.nodes[values[0]]['node'].name, " duration: ", child_lat)
 
                             child_now  = G.nodes[values[0]]['node'].name
+                            # print("Child now ", child_now)
 
-                            ## if this is the first time for parent span!!!, let's update our oracle_child_map
+                            ## if this is the first time for parent span!!!, let's update our oracle_child_map with single child
                             if span_now not in self.concurrent_children:
                                 self.concurrent_children[span_now] = [{"children":set([G.nodes[values[0]]['node'].name]), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}]
                                 self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
+
+                                print(span_now, "     Added this sppan for first time, ", self.concurrent_children[span_now])
 
                             ## if we seen parent span, then try to find this children
                             else:
@@ -227,6 +230,7 @@ class TraceManager():
                                         item["max"].appendleft(child_lat) ## update its latency estimator
 
                                 if not child_found_before:
+                                    print("We did not see this single child before")
                                     obj = {"children":set([G.nodes[values[0]]['node'].name]), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}
                                     obj["max"].appendleft(child_lat)
                                     self.concurrent_children[span_now].append(obj)
@@ -268,13 +272,15 @@ class TraceManager():
                                         if span_now not in self.concurrent_children:
                                             self.concurrent_children[span_now] = [{"children":set(active_children), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}]
                                             self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
+                                            print("First time added span check children ", self.concurrent_children[span_now])
 
                                         ## if we seen parent span, then try to find this children
                                         else:
                                             child_found_before = False
                                             ## iterate children and see if it is there!
                                             for item in self.concurrent_children[span_now]:
-                                                if set(active_children).isdisjoint(item["children"]): ## yes we have some common elements for active children -- so adding to concurrent list
+                                                if not set(active_children).isdisjoint(item["children"]): ## yes we have some common elements for active children -- so adding to concurrent list
+                                                    print("Yes we have some common elements for active children and previos children from map")
                                                     child_found_before = True
                                                     item["max"].appendleft(child_lat) ## update its latency estimator
 
@@ -284,6 +290,7 @@ class TraceManager():
 
 
                                             if not child_found_before:
+                                                print("We do not have any commons, so creating sequential child")
                                                 obj = {"children":set(active_children), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}
                                                 obj["max"].appendleft(child_lat)
                                                 self.concurrent_children[span_now].append(obj)
