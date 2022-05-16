@@ -19,6 +19,7 @@ from scipy.stats import norm, kurtosis, pearsonr
 from kneed import KneeLocator, DataGenerator as dg
 import random
 from configparser import SafeConfigParser
+from collections import deque 
 
 
 class TraceManager():
