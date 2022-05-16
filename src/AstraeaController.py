@@ -29,6 +29,7 @@ color = sns.color_palette("Set2", 2)
 ## Astraea parameters
 reward_field = "Var_sum"
 confidence = 0.95
+period = parser.get('application_plane', 'Period')
 
   
   
@@ -39,7 +40,7 @@ def main():
 
     print("---- Astraea started!")
 
-    time.sleep(5)
+    time.sleep(period)
 
     # Astraea framework Initialized
     bandit = banditalg.ABE("ABE", "Experiment-id1", confidence=confidence, reward_field = reward_field)
@@ -73,6 +74,7 @@ def main():
         astraeaOrc.issue_sampling_policy_txt(splits)
 
         print("Finished epoch ", epoch)
+        time.sleep(period)
 
 
 
