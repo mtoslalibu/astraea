@@ -280,7 +280,7 @@ class TraceManager():
 
                                                     for active_diff in list(set(active_children) - item["children"]): ## add mnissing elements if any
                                                         print("Active diff now, ", active_diff)
-                                                        item["children"].add([active_diff])
+                                                        item["children"].add(active_diff)
 
 
                                             if not child_found_before:
