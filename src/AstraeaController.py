@@ -47,24 +47,29 @@ def main():
     
     ## peridically run and 1) read traces
     epoch = 0
-    all_traces = astraeaMan.get_traces_jaeger_api(service = "compose-post-service")
-    print("collected the batch with len: ", len(all_traces["data"]))
 
-    ## parse traces and extract span units
-    trace_parsed = astraeaMan.traces_to_df_asplos_experimental(all_traces["data"],application_name="SocialNetwork")
-    df_traces = trace_parsed[0]
+    while epoch < 100:
+        epoch += 1
+        print("\n\n\n\n\n---- runninng epoch: ", epoch)
 
-    display(df_traces)
+        all_traces = astraeaMan.get_traces_jaeger_api(service = "compose-post-service")
+        print("collected the batch with len: ", len(all_traces["data"]))
 
-    ## apply bayesian methods and get new sampling policy
-    splits, sorted_spans = bandit.mert_sampling_median_asplos(df_traces, epoch)
-    print("Check new sampling \n", splits)
-    print("Check sorted spans\n",sorted_spans)
+        ## parse traces and extract span units
+        trace_parsed = astraeaMan.traces_to_df_asplos_experimental(all_traces["data"],application_name="SocialNetwork")
+        df_traces = trace_parsed[0]
 
-    # astraeaOrc.issue_sampling_policy(splits)
-    astraeaOrc.issue_sampling_policy_txt(splits)
+        display(df_traces)
 
-    print("Finished epoch ", epoch)
+        ## apply bayesian methods and get new sampling policy
+        splits, sorted_spans = bandit.mert_sampling_median_asplos(df_traces, epoch)
+        print("Check new sampling \n", splits)
+        print("Check sorted spans\n",sorted_spans)
+
+        # astraeaOrc.issue_sampling_policy(splits)
+        astraeaOrc.issue_sampling_policy_txt(splits)
+
+        print("Finished epoch ", epoch)
 
 
 
