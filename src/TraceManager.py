@@ -30,6 +30,7 @@ class TraceManager():
         self.period = parser.get('application_plane', 'Period')
 
         self.concurrent_children = {} ### key and list of children names e.g., "spanA" : [{children: ("spanB", "spanC", "spanD"), max = [12,11,10,11,11]
+        self.children_moving_window = 5
 
     ## get traces from API, given service and lookback period
     def get_traces_jaeger_api(self,service = "compose-post-service"):
@@ -213,7 +214,7 @@ class TraceManager():
 
                             ## if this is the first time for parent span!!!, let's update our oracle_child_map
                             if span_now not in self.concurrent_children:
-                                self.concurrent_children[span_now] = [{"children":set(G.nodes[values[0]]['node'].name), "max":deque([0]*100,maxlen=100)}]
+                                self.concurrent_children[span_now] = [{"children":set(G.nodes[values[0]]['node'].name), "max":deque([0]*children_moving_window,maxlen=children_moving_window)}]
                                 self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
 
                             ## if we seen parent span, then try to find this children
@@ -226,7 +227,7 @@ class TraceManager():
                                         item["max"].appendleft(child_lat) ## update its latency estimator
 
                                 if not child_found_before:
-                                    obj = {"children":set(G.nodes[values[0]]['node'].name), "max":deque([0]*100,maxlen=100)}
+                                    obj = {"children":set(G.nodes[values[0]]['node'].name), "max":deque([0]*children_moving_window,maxlen=children_moving_window)}
                                     obj["max"].appendleft(child_lat)
                                     self.concurrent_children[span_now].append(obj)
 
@@ -262,7 +263,7 @@ class TraceManager():
 
                                         ## if this is the first time for parent span!!!, let's update our oracle_child_map
                                         if span_now not in self.concurrent_children:
-                                            self.concurrent_children[span_now] = [{"children":set(active_children), "max":deque([0]*100,maxlen=100)}]
+                                            self.concurrent_children[span_now] = [{"children":set(active_children), "max":deque([0]*children_moving_window,maxlen=children_moving_window)}]
                                             self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
 
                                         ## if we seen parent span, then try to find this children
@@ -279,7 +280,7 @@ class TraceManager():
 
 
                                             if not child_found_before:
-                                                obj = {"children":set(active_diff), "max":deque([0]*100,maxlen=100)}
+                                                obj = {"children":set(active_diff), "max":deque([0]*children_moving_window,maxlen=children_moving_window)}
                                                 obj["max"].appendleft(child_lat)
                                                 self.concurrent_children[span_now].append(obj)
 
