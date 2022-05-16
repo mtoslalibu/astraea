@@ -29,8 +29,7 @@ class TraceManager():
         self.JaegerAPIEndpoint = parser.get('application_plane', 'JaegerAPIEndpoint')
         self.period = parser.get('application_plane', 'Period')
 
-        self.concurrent_children = {} ### key and list of children names e.g., "spanA" : {children: ["spanB", "spanC", "spanD"], max = [12,11,10,11,11]
-        self.span_self_estimates = {} ## key and with deque([0]*100,maxlen=100) 
+        self.concurrent_children = {} ### key and list of children names e.g., "spanA" : [{children: ("spanB", "spanC", "spanD"), max = [12,11,10,11,11]
 
     ## get traces from API, given service and lookback period
     def get_traces_jaeger_api(self,service = "compose-post-service"):
@@ -89,6 +88,7 @@ class TraceManager():
             G = nx.DiGraph()
             G_spannames = nx.DiGraph()
             traceID = trace["traceID"]
+            print("Working on TraceID")
             span_ids = []
         
             for span in trace["spans"]:
@@ -169,18 +169,14 @@ class TraceManager():
 
                 if G.out_degree(x)==0: ###leaves
 
-                    # ## check if it had children before (i.e., disabled children)
-                    # list_of_children_w_estimates = self.children_map[span_now]
-                    # if len(list_of_children_w_estimates) > 0:
-                    #     ## do semothing
-                    # else:
-                    #     queue.appendleft(G.nodes[x]['node'].latency)
-
-
                     ## check if it has any concurrent children more than 1 (i.e., disabled children)
                     if span_now in self.concurrent_children: ## it had children before so extract the children estimate
-                        estimates_before = self.concurrent_children[span_now]["max"]
-                        local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - estimates_before[estimates_before!=0].mean()
+                        child_lat_before = 0
+                        for elem in self.concurrent_children[span_now]:
+                            estimates_before = elem["max"]
+                            child_lat_before += estimates_before[estimates_before!=0].mean()
+
+                        local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - child_lat_before
                         local_span_count[span_now] = local_span_count.get(span_now,0) + 1
                         print("***** This span used to have children but now disabled ", span_now, " see child ",  self.concurrent_children[span_now])
 
@@ -195,14 +191,6 @@ class TraceManager():
 
                 else: ## intermediate spans
                     span_child =nx.dfs_successors(G, source=x, depth_limit=1)
-
-                    # self.concurrent_children = {} ### key and list of children names e.g., "spanA" : {children: ["spanB", "spanC", "spanD"], max = [12,11,10,11,11]
-                    # self.span_self_estimates = {} ## key and with deque([0]*100,maxlen=100) 
-
-                    #   # get names of children and max_value deque
-                    # append duration of new children in this graph to max_value deque ## as it is enabled it is likely that it is the most problematic
-                    ## calculate self segment by = span_now_duration - mean(max_value)
-
                     
                     child_lat = 0
                     ## check concurrency
@@ -258,35 +246,7 @@ class TraceManager():
                                 ## if process started add it to the list
                                 if "_start" in key:
                                     spans_processes.append(key)
-                                    active_children.append(key.split("_start")[0])
-
-                                    # ## first time 
-                                    # if span_now not in self.concurrent_children:
-                                    #     self.concurrent_children[span_now] = []
-                                    
-                                    # ## very first span that can be concurrent
-                                    # first_child = G.nodes[val]['node'].name
-
-                                    # ## iterate all possible children and if none has this before, create new element in list
-                                    # child_found_before = False
-
-                                    # if len(spans_processes) == 1:
-                                    #     for elem in self.concurrent_children[span_now]:
-                                    #         if first_child in elem["children"]:
-                                    #             child_found_before = True
-
-                                    #     ## ok, this is the first time we observe this child who is most start, so create concurrent item       
-
-                                    #     if not child_found_before:
-                                    #         self.concurrent_children[span_now].append({"children":set(first_child), "max":deque([0]*100,maxlen=100)})
-
-
-                                    # ## if there are already children, now we are sure conccurency so append it in concurrent children (to the set that includes previous process)
-                                    # else:
-                                    #     for elem in self.concurrent_children[span_now]:
-                                    #         if spans_processes[0] in elem["children"]:
-                                    #             elem["children"].add(G.nodes[val]['node'].name)
-                                                
+                                    active_children.append(key.split("_start")[0])                                                
 
                                     
                                 else:
@@ -329,7 +289,7 @@ class TraceManager():
                     local_span_stats[span_now] = local_span_stats.get(span_now,0) + G.nodes[x]['node'].latency - child_lat
                     local_span_count[span_now] = local_span_count.get(span_now,0) + 1
     #                 print("Parent now: ", span_now, " new duration: ", local_span_stats[span_now])
-            
+            print("******** debug concurrent children " , self.concurrent_children)
             ### sum repeating spans and add to span_stats
             for item in local_span_stats:
                 if item not in span_stats:
