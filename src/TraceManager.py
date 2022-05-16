@@ -159,7 +159,7 @@ class TraceManager():
                     continue
                     
                 span_now = G.nodes[x]['node'].name   
-    #             print("\n---Main span now: ", span_now, " , duration", G.nodes[x]['node'].latency)
+                print("\n---Main span now: ", span_now, " , duration", G.nodes[x]['node'].latency)
                 
                 if G.in_degree(x) == 0: ## root
                     end_to_end_lats.append(G.nodes[x]['node'].latency)
@@ -180,6 +180,7 @@ class TraceManager():
                     if span_now in self.concurrent_children: ## it had children before so extract the children estimate
                         local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - np.mean(self.concurrent_children[span_now]["max"])
                         local_span_count[span_now] = local_span_count.get(span_now,0) + 1
+                        ali = 0/0
 
                     else:
                         ## sum local observations
