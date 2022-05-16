@@ -59,7 +59,7 @@ def get_traces_jaeger_api(service = "compose-post-service", period=5):
     """
     print("------ JAeger api called")
 
-    JaegerAPIEndpoint = "http://localhost:16686/jaeger/api/traces?end={end}&maxDuration&minDuration&service={service}&start={start}&prettyPrint=true"
+    JaegerAPIEndpoint = "http://localhost:16686/api/traces?end={}&maxDuration&minDuration&service={}&start={}&prettyPrint=true"
 
     
     
@@ -70,6 +70,8 @@ def get_traces_jaeger_api(service = "compose-post-service", period=5):
 
     ## period for lookback
     start = end - period * 1000000
+
+    print("start: ", start, " end: ",end)
 
     formatted_endpoint = JaegerAPIEndpoint.format(end, service, start)
     print("formatted endpiont now: ", formatted_endpoint)

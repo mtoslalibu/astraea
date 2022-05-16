@@ -10,6 +10,8 @@ from matplotlib.pyplot import figure
 import glob
 import random
 import time
+from IPython.display import display
+
 
 import BayesianMethods as banditalg
 import TraceManager as traceManager
@@ -36,14 +38,16 @@ def main():
     print("---- Astraea started!")
 
     # Bayesian framework Initialized
-    bandit = banditalg.ABE("ABE", problem, confidence=confidence, reward_field = reward_field)
+    bandit = banditalg.ABE("ABE", "Experiment-id1", confidence=confidence, reward_field = reward_field)
 
+    
     ## peridically run and 1) read traces
+    epoch = 0
     all_traces = traceManager.get_traces_jaeger_api(service = "compose-post-service", period=5)
     print("collected the batch with len: ", len(all_traces["data"]))
 
     ## parse traces and extract span units
-    trace_parsed = traceManager.traces_to_df_asplos_experimental(all_traces["data"],is_train_ticket)
+    trace_parsed = traceManager.traces_to_df_asplos_experimental(all_traces["data"],is_train_ticket=False)
     df_traces = trace_parsed[0]
 
     display(df_traces)
