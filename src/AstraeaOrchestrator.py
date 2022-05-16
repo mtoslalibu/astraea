@@ -4,7 +4,7 @@ Issue the new sampling policy at every period
 ------------------------
 """
 import os
-from ConfigParser import SafeConfigParser
+from configparser import SafeConfigParser
 
 class AstraeaOrc():
     def __init__(self):

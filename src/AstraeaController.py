@@ -11,7 +11,7 @@ import glob
 import random
 import time
 from IPython.display import display
-from ConfigParser import SafeConfigParser
+from configparser import SafeConfigParser
 
 
 import BayesianMethods as banditalg

@@ -18,7 +18,7 @@ import random
 from scipy.stats import norm, kurtosis, pearsonr
 from kneed import KneeLocator, DataGenerator as dg
 import random
-from ConfigParser import SafeConfigParser
+from configparser import SafeConfigParser
 
 
 class TraceManager():
@@ -28,19 +28,16 @@ class TraceManager():
         self.JaegerAPIEndpoint = parser.get('application_plane', 'JaegerAPIEndpoint')
         self.period = parser.get('application_plane', 'Period')
 
-        
-
-    ## get current time in jaeger format
-    current_milli_time = lambda: int(round(time.time() * 1000000))
-
     ## get traces from API, given service and lookback period
-    def get_traces_jaeger_api(service = "compose-post-service"):
+    def get_traces_jaeger_api(self,service = "compose-post-service"):
         """
         Method for fetching traces from provided API.  
         """
         print("------ JAeger api called")
 
         # JaegerAPIEndpoint = "http://localhost:16686/api/traces?end={}&maxDuration&minDuration&service={}&start={}&prettyPrint=true"
+            ## get current time in jaeger format
+        current_milli_time = lambda: int(round(time.time() * 1000000))    
         
         end=current_milli_time()
         ## adjust time -- delayed batch by 10 sec
@@ -48,7 +45,7 @@ class TraceManager():
         end = end - delayed_sec * 1000000
 
         ## period for lookback
-        start = end - self.period * 1000000
+        start = end - int(self.period) * 1000000
 
         print("start: ", start, " end: ",end)
 
@@ -62,7 +59,7 @@ class TraceManager():
         return data
         
     ### experimental method to calculate all stats for utility
-    def traces_to_df_asplos_experimental(all_traces_data, is_train_ticket = True):
+    def traces_to_df_asplos_experimental(self,all_traces_data, is_train_ticket = True):
         """
         Method for mapping traces to astraea data structure. 
         Input: trace["data"] and boolean flag to indicate application. Boolean is for identifying unique spans (url is used in tt).
