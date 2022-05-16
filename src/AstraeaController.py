@@ -61,7 +61,8 @@ def main():
     print("Check new sampling \n", splits)
     print("Check sorted spans\n",sorted_spans)
 
-    astraeaOrc.issue_sampling_policy(splits)
+    # astraeaOrc.issue_sampling_policy(splits)
+    astraeaOrc.issue_sampling_policy_txt(splits)
 
     print("Finished epoch ", epoch)
 
