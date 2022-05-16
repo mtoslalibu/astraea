@@ -51,7 +51,7 @@ def main():
     print("collected the batch with len: ", len(all_traces["data"]))
 
     ## parse traces and extract span units
-    trace_parsed = astraeaMan.traces_to_df_asplos_experimental(all_traces["data"],application_name="Social Network")
+    trace_parsed = astraeaMan.traces_to_df_asplos_experimental(all_traces["data"],application_name="SocialNetwork")
     df_traces = trace_parsed[0]
 
     display(df_traces)
