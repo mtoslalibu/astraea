@@ -49,7 +49,7 @@ class TraceManager():
 
         print("start: ", start, " end: ",end)
 
-        formatted_endpoint = self.JaegerAPIEndpoint.format(end, service, start)
+        formatted_endpoint = str(self.JaegerAPIEndpoint.format(end, service, start)).replace('"','')
         print("formatted endpiont now: ", formatted_endpoint)
 
         response_batch = requests.get(url = formatted_endpoint)
