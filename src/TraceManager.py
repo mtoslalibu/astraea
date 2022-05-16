@@ -178,7 +178,8 @@ class TraceManager():
 
                     ## check if it has any concurrent children more than 1 (i.e., disabled children)
                     if span_now in self.concurrent_children: ## it had children before so extract the children estimate
-                        local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - np.mean(self.concurrent_children[span_now]["max"])
+                        estimates_before = self.concurrent_children[span_now]["max"]
+                        local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - estimates_before[estimates_before!=0].mean()
                         local_span_count[span_now] = local_span_count.get(span_now,0) + 1
                         print("***** This span used to have children but now disabled ", span_now, " see child ",  self.concurrent_children[span_now])
 
@@ -235,7 +236,7 @@ class TraceManager():
 
                                     ## first time 
                                     if span_now not in self.concurrent_children:
-                                        self.concurrent_children[span_now] = {"children":set(), "max":[]}
+                                        self.concurrent_children[span_now] = {"children":set(), "max":deque([0]*100,maxlen=100)}
 
                                     ## append it in concurrent children
                                     self.concurrent_children[span_now]["children"].add(G.nodes[val]['node'].name)
