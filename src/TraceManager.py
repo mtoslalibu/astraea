@@ -209,11 +209,11 @@ class TraceManager():
                             child_lat = child_lat + G.nodes[values[0]]['node'].latency
                             print("-=-= Tek child: ", G.nodes[values[0]]['node'].name, " duration: ", child_lat)
 
-                            child_now  = G.nodes[val]['node'].name
+                            child_now  = G.nodes[values[0]]['node'].name
 
                             ## if this is the first time for parent span!!!, let's update our oracle_child_map
                             if span_now not in self.concurrent_children:
-                                self.concurrent_children[span_now] = [{"children":set(G.nodes[val]['node'].name), "max":deque([0]*100,maxlen=100)}]
+                                self.concurrent_children[span_now] = [{"children":set(G.nodes[values[0]]['node'].name), "max":deque([0]*100,maxlen=100)}]
                                 self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
 
                             ## if we seen parent span, then try to find this children
@@ -226,7 +226,7 @@ class TraceManager():
                                         item["max"].appendleft(child_lat) ## update its latency estimator
 
                                 if not child_found_before:
-                                    obj = {"children":set(G.nodes[val]['node'].name), "max":deque([0]*100,maxlen=100)}
+                                    obj = {"children":set(G.nodes[values[0]]['node'].name), "max":deque([0]*100,maxlen=100)}
                                     obj["max"].appendleft(child_lat)
                                     self.concurrent_children[span_now].append(obj)
 
