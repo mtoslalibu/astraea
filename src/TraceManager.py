@@ -213,7 +213,7 @@ class TraceManager():
 
                             ## if this is the first time for parent span!!!, let's update our oracle_child_map
                             if span_now not in self.concurrent_children:
-                                self.concurrent_children[span_now] = [{"children":[G.nodes[val]['node'].name], "max":deque([0]*100,maxlen=100)}]
+                                self.concurrent_children[span_now] = [{"children":set(G.nodes[val]['node'].name), "max":deque([0]*100,maxlen=100)}]
                                 self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
 
                             ## if we seen parent span, then try to find this children
@@ -226,7 +226,7 @@ class TraceManager():
                                         item["max"].appendleft(child_lat) ## update its latency estimator
 
                                 if not child_found_before:
-                                    obj = {"children":[G.nodes[val]['node'].name], "max":deque([0]*100,maxlen=100)}
+                                    obj = {"children":set(G.nodes[val]['node'].name), "max":deque([0]*100,maxlen=100)}
                                     obj["max"].appendleft(child_lat)
                                     self.concurrent_children[span_now].append(obj)
 
@@ -262,7 +262,7 @@ class TraceManager():
 
                                         ## if this is the first time for parent span!!!, let's update our oracle_child_map
                                         if span_now not in self.concurrent_children:
-                                            self.concurrent_children[span_now] = [{"children":[active_children], "max":deque([0]*100,maxlen=100)}]
+                                            self.concurrent_children[span_now] = [{"children":set(active_children), "max":deque([0]*100,maxlen=100)}]
                                             self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
 
                                         ## if we seen parent span, then try to find this children
@@ -279,7 +279,7 @@ class TraceManager():
 
 
                                             if not child_found_before:
-                                                obj = {"children":[active_diff], "max":deque([0]*100,maxlen=100)}
+                                                obj = {"children":set(active_diff), "max":deque([0]*100,maxlen=100)}
                                                 obj["max"].appendleft(child_lat)
                                                 self.concurrent_children[span_now].append(obj)
 
