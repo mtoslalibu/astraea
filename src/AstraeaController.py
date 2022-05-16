@@ -29,6 +29,8 @@ color = sns.color_palette("Set2", 2)
 ## Astraea parameters
 reward_field = "Var_sum"
 confidence = 0.95
+
+parser = SafeConfigParser()
 period = parser.get('application_plane', 'Period')
 
   
