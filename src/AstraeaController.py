@@ -32,7 +32,7 @@ confidence = 0.95
 
 parser = SafeConfigParser()
 parser.read('../conf/astraea-config.ini')
-period = parser.get('application_plane', 'Period')
+period = int(parser.get('application_plane', 'Period'))
 
   
   
