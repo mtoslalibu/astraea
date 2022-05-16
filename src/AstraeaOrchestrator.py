@@ -43,7 +43,7 @@ class AstraeaOrc():
             line = line.strip()
             line_arr = line.split(" ")
             if line_arr[0] in splits:
-                changes = line.replace(line_arr[1], splits[line_arr[0]])
+                changes = line.replace(line_arr[1], str(splits[line_arr[0]]))
             else:
                 changes = line
             
