@@ -11,10 +11,12 @@ import glob
 import random
 import time
 from IPython.display import display
+from ConfigParser import SafeConfigParser
 
 
 import BayesianMethods as banditalg
 import TraceManager as traceManager
+import AstraeaOrchestrator as ao
 
 pd.set_option('display.max_colwidth', None)
 pd.set_option("precision", 1)
@@ -37,17 +39,19 @@ def main():
 
     print("---- Astraea started!")
 
-    # Bayesian framework Initialized
+    # Astraea framework Initialized
     bandit = banditalg.ABE("ABE", "Experiment-id1", confidence=confidence, reward_field = reward_field)
+    astraeaOrc = ao.AstraeaOrc()
+    astraeaMan = traceManager.TraceManager()
 
     
     ## peridically run and 1) read traces
     epoch = 0
-    all_traces = traceManager.get_traces_jaeger_api(service = "compose-post-service", period=5)
+    all_traces = astraeaMan.get_traces_jaeger_api(service = "compose-post-service")
     print("collected the batch with len: ", len(all_traces["data"]))
 
     ## parse traces and extract span units
-    trace_parsed = traceManager.traces_to_df_asplos_experimental(all_traces["data"],is_train_ticket=False)
+    trace_parsed = astraeaMan.traces_to_df_asplos_experimental(all_traces["data"],is_train_ticket=False)
     df_traces = trace_parsed[0]
 
     display(df_traces)
@@ -56,6 +60,12 @@ def main():
     splits, sorted_spans = bandit.mert_sampling_median_asplos(df_traces, epoch)
     print("Check new sampling \n", splits)
     print("Check sorted spans\n",sorted_spans)
+
+    astraeaOrc.issue_sampling_policy(splits)
+
+    print("Finished epoch ", epoch)
+
+
 
 
   
