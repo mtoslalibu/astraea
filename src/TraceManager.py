@@ -159,7 +159,7 @@ class TraceManager():
                     continue
                     
                 span_now = G.nodes[x]['node'].name   
-                print("\n---Main span now: ", span_now, " , duration", G.nodes[x]['node'].latency)
+                print("\n---Main span now: ", span_now, " , duration", G.nodes[x]['node'].latency, " id ", G.nodes[x]['node'].id)
                 
                 if G.in_degree(x) == 0: ## root
                     end_to_end_lats.append(G.nodes[x]['node'].latency)
@@ -180,7 +180,7 @@ class TraceManager():
                     if span_now in self.concurrent_children: ## it had children before so extract the children estimate
                         local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - np.mean(self.concurrent_children[span_now]["max"])
                         local_span_count[span_now] = local_span_count.get(span_now,0) + 1
-                        ali = 0/0
+                        print("***** This span used to have children but now disabled ", span_now, " see child ",  self.concurrent_children[span_now])
 
                     else:
                         ## sum local observations
@@ -206,6 +206,7 @@ class TraceManager():
                     ## check concurrency
                     child_dict = {}
                     print(span_child)
+                    ## span_child = span_now : [children]
                     for key, values in span_child.items():
                         print(key, values)
 
@@ -216,7 +217,7 @@ class TraceManager():
 
                         else:
                             child_lat = child_lat + G.nodes[values[0]]['node'].latency
-    #                         print("-=-= Tek child: ", G.nodes[values[0]]['node'].name, " duration: ", child_lat)
+                            print("-=-= Tek child: ", G.nodes[values[0]]['node'].name, " duration: ", child_lat)
                         
                         if child_dict:
                             spans_processes = []
@@ -227,13 +228,17 @@ class TraceManager():
                                 ## if first span then set most start time
                                 if len(spans_processes) == 0:
                                     most_start = value
+                                
                                 ## if process started add it to the list
                                 if "_start" in key:
                                     spans_processes.append(key)
 
                                     ## first time 
                                     if span_now not in self.concurrent_children:
-                                        self.concurrent_children[span_now] = {"children":[], "max":[]}
+                                        self.concurrent_children[span_now] = {"children":set(), "max":[]}
+
+                                    ## append it in concurrent children
+                                    self.concurrent_children[span_now]["children"].add(G.nodes[val]['node'].name)
                                     
 
                                 else:
@@ -243,6 +248,9 @@ class TraceManager():
                                     if len(spans_processes) == 0: 
                                         child_lat = child_lat + (value - most_start)
                                         print("*** Check child : ", key, " , duration: ", (value - most_start), ' ,total dur: ' , child_lat)
+
+                                        ### update child latency estimator
+                                        self.concurrent_children[span_now]["max"].appendleft(value - most_start)
                                         most_start = 0
                                         
                     
