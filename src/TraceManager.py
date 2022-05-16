@@ -89,7 +89,7 @@ class TraceManager():
             G = nx.DiGraph()
             G_spannames = nx.DiGraph()
             traceID = trace["traceID"]
-            print("Working on TraceID")
+            print("Working on TraceID " ,traceID)
             span_ids = []
         
             for span in trace["spans"]:
