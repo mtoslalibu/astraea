@@ -28,6 +28,9 @@ class TraceManager():
         self.JaegerAPIEndpoint = parser.get('application_plane', 'JaegerAPIEndpoint')
         self.period = parser.get('application_plane', 'Period')
 
+        self.concurrent_children = {} ### key and list of children names e.g., "spanA" : {children: ["spanB", "spanC", "spanD"], max = [12,11,10,11,11]
+        self.span_self_estimates = {} ## key and with deque([0]*100,maxlen=100) 
+
     ## get traces from API, given service and lookback period
     def get_traces_jaeger_api(self,service = "compose-post-service"):
         """
@@ -164,9 +167,24 @@ class TraceManager():
                     e2e_lat = G.nodes[x]['node'].latency
 
                 if G.out_degree(x)==0: ###leaves
-                    ## sum local observations
-                    local_span_stats[span_now] = local_span_stats.get(span_now,0) + G.nodes[x]['node'].latency
-                    local_span_count[span_now] = local_span_count.get(span_now,0) + 1
+
+                    # ## check if it had children before (i.e., disabled children)
+                    # list_of_children_w_estimates = self.children_map[span_now]
+                    # if len(list_of_children_w_estimates) > 0:
+                    #     ## do semothing
+                    # else:
+                    #     queue.appendleft(G.nodes[x]['node'].latency)
+
+
+                    ## check if it has any concurrent children more than 1 (i.e., disabled children)
+                    if span_now in self.concurrent_children: ## it had children before so extract the children estimate
+                        local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - np.mean(self.concurrent_children[span_now]["max"])
+                        local_span_count[span_now] = local_span_count.get(span_now,0) + 1
+
+                    else:
+                        ## sum local observations
+                        local_span_stats[span_now] = local_span_stats.get(span_now,0) + G.nodes[x]['node'].latency
+                        local_span_count[span_now] = local_span_count.get(span_now,0) + 1
                     
                     local_span_max[span_now] = G.nodes[x]['node'].latency if G.nodes[x]['node'].latency > local_span_max.get(span_now,0) else local_span_max.get(span_now,0)
                     
@@ -174,15 +192,27 @@ class TraceManager():
 
                 else: ## intermediate spans
                     span_child =nx.dfs_successors(G, source=x, depth_limit=1)
+
+                    # self.concurrent_children = {} ### key and list of children names e.g., "spanA" : {children: ["spanB", "spanC", "spanD"], max = [12,11,10,11,11]
+                    # self.span_self_estimates = {} ## key and with deque([0]*100,maxlen=100) 
+
+                    #   # get names of children and max_value deque
+                    # append duration of new children in this graph to max_value deque ## as it is enabled it is likely that it is the most problematic
+                    ## calculate self segment by = span_now_duration - mean(max_value)
+
                     
                     child_lat = 0
                     ## check concurrency
                     child_dict = {}
+                    print(span_child)
                     for key, values in span_child.items():
+                        print(key, values)
+
                         if len(values) > 1:
                             for val in values:
                                 child_dict[G.nodes[val]['node'].id + "_start"] = G.nodes[val]['node'].start
                                 child_dict[G.nodes[val]['node'].id + "_end"] = G.nodes[val]['node'].end
+
                         else:
                             child_lat = child_lat + G.nodes[values[0]]['node'].latency
     #                         print("-=-= Tek child: ", G.nodes[values[0]]['node'].name, " duration: ", child_lat)
@@ -199,13 +229,19 @@ class TraceManager():
                                 ## if process started add it to the list
                                 if "_start" in key:
                                     spans_processes.append(key)
+
+                                    ## first time 
+                                    if span_now not in self.concurrent_children:
+                                        self.concurrent_children[span_now] = {"children":[], "max":[]}
+                                    
+
                                 else:
                                     ## remove the start tracepoint
                                     spans_processes.remove(key.split("_end")[0]+"_start")
                                     ## if we do not have any elements in the list, then set most end
                                     if len(spans_processes) == 0: 
                                         child_lat = child_lat + (value - most_start)
-    #                                     print("*** Check child : ", key, " , duration: ", (value - most_start), ' ,total dur: ' , child_lat)
+                                        print("*** Check child : ", key, " , duration: ", (value - most_start), ' ,total dur: ' , child_lat)
                                         most_start = 0
                                         
                     
