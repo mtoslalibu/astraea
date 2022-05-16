@@ -214,12 +214,34 @@ class TraceManager():
 
                         if len(values) > 1:
                             for val in values:
-                                child_dict[G.nodes[val]['node'].id + "_start"] = G.nodes[val]['node'].start
-                                child_dict[G.nodes[val]['node'].id + "_end"] = G.nodes[val]['node'].end
+                                child_dict[G.nodes[val]['node'].name + "_start"] = G.nodes[val]['node'].start
+                                child_dict[G.nodes[val]['node'].name + "_end"] = G.nodes[val]['node'].end
 
                         else:
                             child_lat = child_lat + G.nodes[values[0]]['node'].latency
                             print("-=-= Tek child: ", G.nodes[values[0]]['node'].name, " duration: ", child_lat)
+
+                            child_now  = G.nodes[val]['node'].name
+
+                            ## if this is the first time for parent span!!!, let's update our oracle_child_map
+                            if span_now not in self.concurrent_children:
+                                self.concurrent_children[span_now] = [{"children":[G.nodes[val]['node'].name], "max":deque([0]*100,maxlen=100)}]
+                                self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
+
+                            ## if we seen parent span, then try to find this children
+                            else:
+                                child_found_before = False
+                                ## iterate children and see if it is there!
+                                for item in self.concurrent_children[span_now]:
+                                    if child_now in item["children"]:
+                                        child_found_before = True
+                                        item["max"].appendleft(child_lat) ## update its latency estimator
+
+                                if not child_found_before:
+                                    obj = {"children":[G.nodes[val]['node'].name], "max":deque([0]*100,maxlen=100)}
+                                    obj["max"].appendleft(child_lat)
+                                    self.concurrent_children[span_now].append(obj)
+
                         
                         if child_dict:
                             spans_processes = []
@@ -227,22 +249,46 @@ class TraceManager():
                             ## sort child dict by values
                             child_dict = {k: v for k, v in sorted(child_dict.items(), key=lambda item: item[1])}
                             for key,value in child_dict.items():
+
                                 ## if first span then set most start time
                                 if len(spans_processes) == 0:
                                     most_start = value
+                                    active_children = []
                                 
                                 ## if process started add it to the list
                                 if "_start" in key:
                                     spans_processes.append(key)
+                                    active_children.append(key.split("_start")[0])
 
-                                    ## first time 
-                                    if span_now not in self.concurrent_children:
-                                        self.concurrent_children[span_now] = {"children":set(), "max":deque([0]*100,maxlen=100)}
-
-                                    ## append it in concurrent children
-                                    self.concurrent_children[span_now]["children"].add(G.nodes[val]['node'].name)
+                                    # ## first time 
+                                    # if span_now not in self.concurrent_children:
+                                    #     self.concurrent_children[span_now] = []
                                     
+                                    # ## very first span that can be concurrent
+                                    # first_child = G.nodes[val]['node'].name
 
+                                    # ## iterate all possible children and if none has this before, create new element in list
+                                    # child_found_before = False
+
+                                    # if len(spans_processes) == 1:
+                                    #     for elem in self.concurrent_children[span_now]:
+                                    #         if first_child in elem["children"]:
+                                    #             child_found_before = True
+
+                                    #     ## ok, this is the first time we observe this child who is most start, so create concurrent item       
+
+                                    #     if not child_found_before:
+                                    #         self.concurrent_children[span_now].append({"children":set(first_child), "max":deque([0]*100,maxlen=100)})
+
+
+                                    # ## if there are already children, now we are sure conccurency so append it in concurrent children (to the set that includes previous process)
+                                    # else:
+                                    #     for elem in self.concurrent_children[span_now]:
+                                    #         if spans_processes[0] in elem["children"]:
+                                    #             elem["children"].add(G.nodes[val]['node'].name)
+                                                
+
+                                    
                                 else:
                                     ## remove the start tracepoint
                                     spans_processes.remove(key.split("_end")[0]+"_start")
@@ -252,7 +298,31 @@ class TraceManager():
                                         print("*** Check child : ", key, " , duration: ", (value - most_start), ' ,total dur: ' , child_lat)
 
                                         ### update child latency estimator
-                                        self.concurrent_children[span_now]["max"].appendleft(value - most_start)
+                                        # self.concurrent_children[span_now]["max"].appendleft(value - most_start)
+
+                                        ## if this is the first time for parent span!!!, let's update our oracle_child_map
+                                        if span_now not in self.concurrent_children:
+                                            self.concurrent_children[span_now] = [{"children":[active_children], "max":deque([0]*100,maxlen=100)}]
+                                            self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
+
+                                        ## if we seen parent span, then try to find this children
+                                        else:
+                                            child_found_before = False
+                                            ## iterate children and see if it is there!
+                                            for item in self.concurrent_children[span_now]:
+                                                if set(active_children).isdisjoint(item["children"]): ## yes we have some common elements
+                                                    child_found_before = True
+                                                    item["max"].appendleft(child_lat) ## update its latency estimator
+
+                                                    for active_diff in list(set(active_children) - item["children"]): ## add mnissing elements if any
+                                                        item["children"].add(active_diff)
+
+
+                                            if not child_found_before:
+                                                obj = {"children":[active_diff], "max":deque([0]*100,maxlen=100)}
+                                                obj["max"].appendleft(child_lat)
+                                                self.concurrent_children[span_now].append(obj)
+
                                         most_start = 0
                                         
                     
