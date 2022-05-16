@@ -59,7 +59,7 @@ class TraceManager():
         return data
         
     ### experimental method to calculate all stats for utility
-    def traces_to_df_asplos_experimental(self,all_traces_data, is_train_ticket = True):
+    def traces_to_df_asplos_experimental(self,all_traces_data, application_name = "SocialNetwork"):
         """
         Method for mapping traces to astraea data structure. 
         Input: trace["data"] and boolean flag to indicate application. Boolean is for identifying unique spans (url is used in tt).
@@ -93,7 +93,7 @@ class TraceManager():
                 span_ids.append(span["spanID"])
 
                 
-                if is_train_ticket:
+                if application_name == "TrainTicket" #is_train_ticket:
                     # ****** get http url and append it to span name - unique
                     for tag in span["tags"]:
                         if tag["key"] == "http.url":
@@ -113,7 +113,10 @@ class TraceManager():
                         key_now = trace["processes"][span["processID"]]["serviceName"] + ":" + span["operationName"] 
                 ## if deathstar or uber traces -> keynow does not include url
                 else:
-                    key_now = trace["processes"][span["processID"]]["serviceName"] + ":" + span["operationName"] 
+                    if application_name == "SocialNetwork":
+                        key_now = span["operationName"] 
+                    else: ## Media
+                        key_now = trace["processes"][span["processID"]]["serviceName"] + ":" + span["operationName"] 
     #                 key_now = span["operationName"] 
                     
                 
