@@ -39,6 +39,8 @@ def main():
 
     print("---- Astraea started!")
 
+    time.sleep(5)
+
     # Astraea framework Initialized
     bandit = banditalg.ABE("ABE", "Experiment-id1", confidence=confidence, reward_field = reward_field)
     astraeaOrc = ao.AstraeaOrc()
@@ -47,6 +49,7 @@ def main():
     
     ## peridically run and 1) read traces
     epoch = 0
+
 
     while epoch < 100:
         epoch += 1
