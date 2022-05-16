@@ -214,7 +214,7 @@ class TraceManager():
 
                             ## if this is the first time for parent span!!!, let's update our oracle_child_map
                             if span_now not in self.concurrent_children:
-                                self.concurrent_children[span_now] = [{"children":set(G.nodes[values[0]]['node'].name), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}]
+                                self.concurrent_children[span_now] = [{"children":set([G.nodes[values[0]]['node'].name]), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}]
                                 self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
 
                             ## if we seen parent span, then try to find this children
@@ -227,7 +227,7 @@ class TraceManager():
                                         item["max"].appendleft(child_lat) ## update its latency estimator
 
                                 if not child_found_before:
-                                    obj = {"children":set(G.nodes[values[0]]['node'].name), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}
+                                    obj = {"children":set([G.nodes[values[0]]['node'].name]), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}
                                     obj["max"].appendleft(child_lat)
                                     self.concurrent_children[span_now].append(obj)
 
