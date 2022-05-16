@@ -48,6 +48,37 @@ def get_traces_jaeger_file(file_name):
     # Output: {'name': 'Bob', 'languages': ['English', 'Fench']}
     print("# of traces: ",len(data["data"]))
     return data
+
+## get current time in jaeger format
+current_milli_time = lambda: int(round(time.time() * 1000000))
+
+## get traces from API, given service and lookback period
+def get_traces_jaeger_api(service = "compose-post-service", period=5):
+    """
+    Method for fetching traces from provided API.  
+    """
+    print("------ JAeger api called")
+
+    JaegerAPIEndpoint = "http://localhost:16686/jaeger/api/traces?end={end}&maxDuration&minDuration&service={service}&start={start}&prettyPrint=true"
+
+    
+    
+    end=current_milli_time()
+    ## adjust time -- delayed batch by 10 sec
+    delayed_sec = 10
+    end = end - delayed_sec * 1000000
+
+    ## period for lookback
+    start = end - period * 1000000
+
+    formatted_endpoint = JaegerAPIEndpoint.format(end, service, start)
+    print("formatted endpiont now: ", formatted_endpoint)
+
+    response_batch = requests.get(url = formatted_endpoint)
+
+    data = response_batch.json()
+    print("# of traces: ",len(data["data"]))
+    return data
     
 ### experimental method to calculate all stats for utility
 def traces_to_df_asplos_experimental(all_traces_data, is_train_ticket = True):
