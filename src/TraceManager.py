@@ -93,7 +93,7 @@ class TraceManager():
                 span_ids.append(span["spanID"])
 
                 
-                if application_name == "TrainTicket" #is_train_ticket:
+                if application_name == "TrainTicket": #is_train_ticket:
                     # ****** get http url and append it to span name - unique
                     for tag in span["tags"]:
                         if tag["key"] == "http.url":
