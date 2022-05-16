@@ -271,7 +271,7 @@ class TraceManager():
                                         ## if this is the first time for parent span!!!, let's update our oracle_child_map
                                         if span_now not in self.concurrent_children:
                                             self.concurrent_children[span_now] = [{"children":set(active_children), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}]
-                                            self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
+                                            self.concurrent_children[span_now][0]["max"].appendleft(value - most_start)
                                             print("First time added span check children ", self.concurrent_children[span_now])
 
                                         ## if we seen parent span, then try to find this children
@@ -282,7 +282,7 @@ class TraceManager():
                                                 if not set(active_children).isdisjoint(item["children"]): ## yes we have some common elements for active children -- so adding to concurrent list
                                                     print("Yes we have some common elements for active children and previos children from map")
                                                     child_found_before = True
-                                                    item["max"].appendleft(child_lat) ## update its latency estimator
+                                                    item["max"].appendleft(value - most_start) ## update its latency estimator
 
                                                     for active_diff in list(set(active_children) - item["children"]): ## add mnissing elements if any
                                                         print("Active diff now, ", active_diff)
@@ -292,7 +292,7 @@ class TraceManager():
                                             if not child_found_before:
                                                 print("We do not have any commons, so creating sequential child")
                                                 obj = {"children":set(active_children), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}
-                                                obj["max"].appendleft(child_lat)
+                                                obj["max"].appendleft(value - most_start)
                                                 self.concurrent_children[span_now].append(obj)
 
                                         most_start = 0
