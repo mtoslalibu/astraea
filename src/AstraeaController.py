@@ -31,6 +31,7 @@ reward_field = "Var_sum"
 confidence = 0.95
 
 parser = SafeConfigParser()
+parser.read('../conf/astraea-config.ini')
 period = parser.get('application_plane', 'Period')
 
   
