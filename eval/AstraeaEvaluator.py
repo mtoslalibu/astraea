@@ -89,7 +89,7 @@ def main():
     print("Check it out ", os.system("head -n 3 {}".format(samplingPolicy)))
 
     ## start sending requests
-    cmd_wrk = "{}/wrk -D exp -t 4 -c 4 -d {} -L -s {}/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R {}".format(workloadPath, totalExpDuration, workloadPath, qps)
+    cmd_wrk = "{}/wrk -D exp -t 4 -c 4 -d {} -L -s {}/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R {}".format(workloadPath, totalExpDuration+100, workloadPath, qps)
     print("Sending req in background: ", cmd_wrk)
     process = subprocess.Popen(cmd_wrk, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 

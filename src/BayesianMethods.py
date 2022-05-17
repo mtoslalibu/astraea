@@ -21,6 +21,7 @@ http://proceedings.mlr.press/v28/karnin13.pdf
 ------------------------
 """
 import numpy as np
+from collections import deque
 class ABE():
     
     """
@@ -46,6 +47,8 @@ class ABE():
         self.confidence = confidence
         self.reward_field = reward_field
         self.controlled_span = controlled_span
+        self.reward_moving_average_window = 10 ## last N periods
+        self.max_reward_queue = deque([0]*self.reward_moving_average_window,maxlen=self.reward_moving_average_window)
         
         
     def set_mc_sample(self, sample_count):
@@ -63,7 +66,9 @@ class ABE():
         if self.max_RMEAN == 0: #epoch == 0:
             ## estimate max reward to normalize 
 #             self.max_RMEAN = df_traces[self.reward_field].max() * 2
-            self.max_RMEAN = df_traces[self.reward_field].max() * 3
+            # self.max_RMEAN = df_traces[self.reward_field].max()
+            ## update with moving average
+            
 #             self.max_RMEAN = 10313815
             self.init_set_spans = set(df_traces["Name"])            ## get span names
             ## construct estimates priors for spans
@@ -72,8 +77,19 @@ class ABE():
             self.span_estimates = dict(zip(list(self.init_set_spans), np.repeat(0., len(self.init_set_spans))))
             print("--- Initialized ABE")
             
-               
-        
+
+        ## maximum reward observed in last N periods 
+        if len(df_traces) > 1:
+
+            self.max_reward_queue.appendleft(df_traces[self.reward_field].max())
+
+            print("max_reward_queue: ",self.max_reward_queue )
+            if not isinstance(self.max_reward_queue,int):
+                self.max_RMEAN = self.max_reward_queue[self.max_reward_queue!=0].mean()
+            else:
+                print("Integer for now")
+                self.max_RMEAN = self.max_reward_queue[self.max_reward_queue!=0]
+
         set_spans_now = set(df_traces["Name"])
         ## get difference with orig spans in the first round
         diff_now = set_spans_now.difference(self.init_set_spans)
@@ -105,9 +121,13 @@ class ABE():
 #                 print("binom: ", temp_R/self.max_RMEAN, " for span: ", key)
                 ## update by 1
 
-                successes = np.sum(np.random.binomial(1, temp_R/self.max_RMEAN,1))
+                # successes = np.sum(np.random.binomial(1, temp_R/self.max_RMEAN,1))
+                successes = np.sum(np.random.binomial(1, temp_R/self.max_RMEAN,int(count/30))) ## for each 30 samples, we update by 1
 #                 if key == self.controlled_span:
-                print(key,temp_R, temp_R/self.max_RMEAN, count, successes, self.alpha_spans[key], self.beta_spans[key])
+                print("")
+                print(key, "temp_R", temp_R, "temp_R/self.max_RMEAN", temp_R/self.max_RMEAN, 
+                    "count", count, "successes", successes, 
+                    "alpha_spans", self.alpha_spans[key], "beta_spans", self.beta_spans[key])
 #                 print(key, temp_R/self.max_RMEAN, count, successes)
 #                 successes = np.sum(np.random.binomial(1, temp_R/self.max_RMEAN,count))
                 
@@ -121,7 +141,7 @@ class ABE():
                 
                 ## update by count
                 self.alpha_spans[key] += successes  #* (self.prev_traf.get(key,1)/100)
-                self.beta_spans[key] += (count-successes) #* (self.prev_traf.get(key,1)/100)
+                self.beta_spans[key] += (int(count/30)-successes) #* (self.prev_traf.get(key,1)/100)
 
 
                 
