@@ -23,12 +23,7 @@ from IPython.display import display
 from configparser import SafeConfigParser
 import os
 import subprocess
-
-
-
-
-
-
+import atexit
 
 
 pd.set_option('display.max_colwidth', None)
