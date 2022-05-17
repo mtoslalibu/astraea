@@ -238,7 +238,7 @@ class TraceManager():
                                         max_estimate = [i for i in estimates_before if i > 0]
                                         child_lat += np.mean(max_estimate)
 
-                                        print("-=-=- there were other squential children disabled with ", np.mean(max_estimate))
+                                        print("-=-=- there were other squential children disabled with ",item["children"], np.mean(max_estimate))
 
                                 if not child_found_before:
                                     print("We did not see this single child before ", 0/0)
