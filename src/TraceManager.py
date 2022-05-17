@@ -176,6 +176,7 @@ class TraceManager():
                         child_lat_before = 0
                         for elem in self.concurrent_children[span_now]:
                             estimates_before = elem["max"]
+                            print("Was children before so check estimates for " ,  span_now, elem, estimates_before)
                             child_lat_before += estimates_before[estimates_before!=0].mean()
 
                         local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - child_lat_before
