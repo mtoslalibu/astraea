@@ -73,11 +73,12 @@ print(all_spans_list)
 print("***** Welcome to Astraea evaluator!")
 
   
-process
+process = None
 def exit_handler():
     print('My application is ending!')
-    process.terminate()
-    print("Killed")
+    if process:
+        process.terminate()
+        print("Killed")
 
 # Defining main function
 def main():
