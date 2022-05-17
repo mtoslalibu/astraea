@@ -49,7 +49,7 @@ class AstraeaControllerEval():
         # The data assigned to the list e.g., list_data=[['03','Smith','Science'], ...]
         # First, open the old CSV file in append mode, hence mentioned as 'a'
         # Then, for the CSV file, create a file object
-        with open(file_name, 'a', newline='') as f_object:  
+        with open(file_name, 'a+', newline='') as f_object:  
             # Pass the CSV  file object to the writer() function
             writer_object = writer(f_object)
             # Pass the data in the list as an argument into the writerow() function
