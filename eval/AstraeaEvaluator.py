@@ -19,8 +19,12 @@ from configparser import SafeConfigParser
 import os
 import subprocess
 
-
+import sys
+sys.path.insert(0, '../src')
 from src.AstraeaController import AstraeaController
+
+
+
 
 pd.set_option('display.max_colwidth', None)
 pd.set_option("precision", 1)
