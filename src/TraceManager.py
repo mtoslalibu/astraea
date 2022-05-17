@@ -195,6 +195,9 @@ class TraceManager():
                     local_span_min[span_now] = G.nodes[x]['node'].latency if G.nodes[x]['node'].latency < local_span_min.get(span_now,0) else local_span_min.get(span_now,0)
 
                 else: ## intermediate spans
+                    if span_now == "/wrk2-api/post/compose":
+                        print("Hard coded for Social Network repeating span")
+                        continue
                     span_child =nx.dfs_successors(G, source=x, depth_limit=1) ## get all immediate children
                     
                     child_lat = 0
