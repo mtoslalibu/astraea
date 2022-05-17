@@ -64,7 +64,7 @@ else:
     workloadPath = parser.get('experimentation_plane', 'WorkloadGeneratorPathTT')
 
 
-all_spans_list = all_spans.read().split(",")
+all_spans_list = all_spans.read().split("n")
 print(all_spans_list)
 
 
