@@ -188,7 +188,7 @@ class TraceManager():
 
                         local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - child_lat_before
                         local_span_count[span_now] = local_span_count.get(span_now,0) + 1
-                        # print("***** This span used to have children but now disabled ", span_now, " see child ",  self.concurrent_children[span_now])
+                        print("***** This leaf used to have child", span_now, G.nodes[x]['node'].latency - child_lat_before, " see child ",  self.concurrent_children[span_now])
 
                     else:
                         ## sum local observations
