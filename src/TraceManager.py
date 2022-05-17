@@ -200,7 +200,7 @@ class TraceManager():
                     # print(span_child)
                     ## span_child = span_now : [children]
                     for key, values in span_child.items():
-                        print(key, values)
+                        # print(key, values)
 
                         if len(values) > 1:
                             for val in values:

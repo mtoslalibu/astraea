@@ -55,7 +55,7 @@ class ABE():
         if self.max_RMEAN == 0: #epoch == 0:
             ## estimate max reward to normalize 
 #             self.max_RMEAN = df_traces[self.reward_field].max() * 2
-            self.max_RMEAN = df_traces[self.reward_field].max() *5
+            self.max_RMEAN = df_traces[self.reward_field].max() * 3
 #             self.max_RMEAN = 10313815
             self.init_set_spans = set(df_traces["Name"])            ## get span names
             ## construct estimates priors for spans

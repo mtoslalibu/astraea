@@ -66,7 +66,7 @@ def main():
         trace_parsed = astraeaMan.traces_to_df_asplos_experimental(all_traces["data"],application_name="SocialNetwork")
         df_traces = trace_parsed[0]
 
-        display(df_traces)
+        display(df_traces.sort_values(by=reward_field, ascending=False))
 
         ## apply bayesian methods and get new sampling policy
         splits, sorted_spans = bandit.mert_sampling_median_asplos(df_traces, epoch)
