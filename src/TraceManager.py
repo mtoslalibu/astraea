@@ -240,12 +240,12 @@ class TraceManager():
 
                                         print("-=-=- there were other squential children disabled with ",item["children"], np.mean(max_estimate))
 
-                                if not child_found_before:
-                                    print("We did not see this single child before ", 0/0)
+                                # if not child_found_before:
+                                #     print("We did not see this single child before ", 0/0)
                                     
-                                    obj = {"children":set([G.nodes[values[0]]['node'].name]), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}
-                                    obj["max"].appendleft(child_lat)
-                                    self.concurrent_children[span_now].append(obj)
+                                #     obj = {"children":set([G.nodes[values[0]]['node'].name]), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}
+                                #     obj["max"].appendleft(child_lat)
+                                #     self.concurrent_children[span_now].append(obj)
 
                                 # local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - child_lat
                                 # local_span_count[span_now] = local_span_count.get(span_now,0) + 1
@@ -316,13 +316,14 @@ class TraceManager():
                                                         item["children"].add(active_diff)
                                                 # else: ### sequential children from before
 
-                                            ### We have observed this parent before but no child like this :/
-                                            if not child_found_before:
-                                                print("-=-=-=-We do not have any commons, so creating sequential child", active_children)
-                                                obj = {"children":set(active_children), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}
-                                                obj["max"].appendleft(value - most_start)
-                                                self.concurrent_children[span_now].append(obj)
-                                                child_lat += value - most_start
+                                            # ### We have observed this parent before but no child like this :/
+                                            # if not child_found_before:
+                                            #     ## TODO! problem!!!!!
+                                            #     print("-=-=-=-We do not have any commons, so creating sequential child", active_children, 0/0)
+                                            #     obj = {"children":set(active_children), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}
+                                            #     obj["max"].appendleft(value - most_start)
+                                            #     self.concurrent_children[span_now].append(obj)
+                                            #     child_lat += value - most_start
 
                                         most_start = 0
                                         
