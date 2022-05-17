@@ -64,8 +64,10 @@ else:
     workloadPath = parser.get('experimentation_plane', 'WorkloadGeneratorPathTT')
 
 
-all_spans_list = all_spans.read().split("n")
+all_spans_list = all_spans.read()
 print(all_spans_list)
+print()
+print(all_spans_list.split("n"))
 
 
 print("***** Welcome to Astraea evaluator!")
