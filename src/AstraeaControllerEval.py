@@ -12,6 +12,7 @@ from configparser import SafeConfigParser
 import random
 from statistics import mean
 import numpy as np
+import os
 
 
 import BayesianMethods as banditalg
