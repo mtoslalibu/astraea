@@ -29,6 +29,8 @@ import subprocess
 
 
 
+
+
 pd.set_option('display.max_colwidth', None)
 pd.set_option("precision", 1)
 pd.options.display.float_format = '{:.1f}'.format
@@ -71,8 +73,15 @@ print(all_spans_list)
 print("***** Welcome to Astraea evaluator!")
 
   
+process
+def exit_handler():
+    print('My application is ending!')
+    process.terminate()
+    print("Killed")
+
 # Defining main function
 def main():
+    atexit.register(exit_handler)
 
     print("---- Astraea evaluation started! Parameters are a) period: ", period, " b) total: ", totalExpDuration)
 
