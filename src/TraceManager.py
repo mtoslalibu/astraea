@@ -313,7 +313,7 @@ class TraceManager():
 
                                             ### We have observed this parent before but no child like this :/
                                             if not child_found_before:
-                                                print("-=-=-=-We do not have any commons, so creating sequential child", active_children, 0/0)
+                                                print("-=-=-=-We do not have any commons, so creating sequential child", active_children)
                                                 obj = {"children":set(active_children), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}
                                                 obj["max"].appendleft(value - most_start)
                                                 self.concurrent_children[span_now].append(obj)
@@ -321,7 +321,7 @@ class TraceManager():
 
                                         most_start = 0
                                         
-                    
+                    print("local span update", span_now, G.nodes[x]['node'].latency, G.nodes[x]['node'].latency - child_lat)
                     local_span_stats[span_now] = local_span_stats.get(span_now,0) + G.nodes[x]['node'].latency - child_lat
                     local_span_count[span_now] = local_span_count.get(span_now,0) + 1
     #                 print("Parent now: ", span_now, " new duration: ", local_span_stats[span_now])
