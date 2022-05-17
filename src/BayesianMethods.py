@@ -85,6 +85,7 @@ class ABE():
 
             print("max_reward_queue: ",self.max_reward_queue )
             max_rew_estimate = self.max_reward_queue[self.max_reward_queue!=0]
+            print("Max rew estimate ", max_rew_estimate )
             if not isinstance(max_rew_estimate,int):
                 self.max_RMEAN = max_rew_estimate.mean()
             else:
