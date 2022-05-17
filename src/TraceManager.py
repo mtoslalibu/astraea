@@ -90,7 +90,7 @@ class TraceManager():
             G = nx.DiGraph()
             G_spannames = nx.DiGraph()
             traceID = trace["traceID"]
-            print("Working on TraceID " ,traceID)
+            # print("Working on TraceID " ,traceID)
             span_ids = []
         
             for span in trace["spans"]:
@@ -302,7 +302,7 @@ class TraceManager():
                     local_span_stats[span_now] = local_span_stats.get(span_now,0) + G.nodes[x]['node'].latency - child_lat
                     local_span_count[span_now] = local_span_count.get(span_now,0) + 1
     #                 print("Parent now: ", span_now, " new duration: ", local_span_stats[span_now])
-            print("******** debug concurrent children " , self.concurrent_children)
+            # print("******** debug concurrent children " , self.concurrent_children)
             ### sum repeating spans and add to span_stats
             for item in local_span_stats:
                 if item not in span_stats:

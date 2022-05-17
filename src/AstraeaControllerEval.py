@@ -107,7 +107,7 @@ class AstraeaControllerEval():
             ### trace sizes
             span_counts = []
             for trace in all_traces["data"]:
-                span_counts.append(len(trace["spans"]), epoch)
+                span_counts.append([len(trace["spans"]), epoch])
 
             self.append_to_csv("results/{}-tracesizes.csv".format(experimentID), span_counts)
             print("******* Saved trace sizes with mean ", np.mean(span_counts, axis=0))
@@ -119,11 +119,11 @@ class AstraeaControllerEval():
                 for line in samplingPolicy:
                     name, var = line.partition(" ")[::2]
                     sampling_policies.append([name.strip(), float(var), epoch])
-                    if name == problem_now:
-                        print("******* Problem's sampling policy ",name, " : ", var)
+                    if name.strip() == problem_now:
+                        print("******* Problem's sampling policy ",name.strip(), " : ", var)
             
 
-            self.append_to_csv("results/{}-probability.csv".format(experimentID), span_counts)
+            self.append_to_csv("results/{}-probability.csv".format(experimentID), sampling_policies)
             print("Saved sampling probabilities")
 
             time.sleep(period)
