@@ -1,5 +1,13 @@
 """
-Some useful links:
+Our online learning framework encapsulates our
+Bayesian online learning formulation and multi-armed bandit based
+sampling algorithm. 
+The former builds belief
+distributions for span utility pairs, whereas the latter takes
+the belief distributions as inputs and decides how
+to adjust the sampling probabilities across spans.
+
+Some useful links for mab review and comparison baselines used:
 # https://courses.cs.washington.edu/courses/cse599i/18wi/resources/lecture4/lecture4.pdf
 ------------------------
 MEDIAN ELIMINATION
