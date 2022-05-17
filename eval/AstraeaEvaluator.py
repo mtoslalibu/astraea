@@ -72,9 +72,9 @@ print("***** Welcome to Astraea evaluator!")
 process = None
 def exit_handler():
     print('My application is ending!')
-    if process:
-        process.terminate()
-        print("Killed")
+    os.killpg(0, signal.SIGKILL)
+ 
+    print("Killed")
 
 # Defining main function
 def main():
@@ -114,7 +114,8 @@ def main():
 # __name__
 if __name__=="__main__":
     os.setpgrp() # create new process group, become its leader
-    try:
-        main()
-    finally:
-        os.killpg(0, signal.SIGKILL) # kill all processes in my group
+    main()
+    # try:
+    #     main()
+    # finally:
+    #     os.killpg(0, signal.SIGKILL) # kill all processes in my group

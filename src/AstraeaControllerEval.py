@@ -75,7 +75,7 @@ class AstraeaControllerEval():
         ## peridically run and 1) read traces, 2) collect stats
         epoch = 0
 
-        totalEpoch = totalExpDuration/period
+        totalEpoch = int(totalExpDuration/period)
         print("\n\n\n\n\n---- Will run for total of epoch : ", totalEpoch)
 
         while epoch < totalEpoch:
