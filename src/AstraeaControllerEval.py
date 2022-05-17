@@ -10,6 +10,8 @@ import time
 from IPython.display import display
 from configparser import SafeConfigParser
 import random
+from statistics import mean
+import numpy as np
 
 
 import BayesianMethods as banditalg
@@ -18,22 +20,22 @@ import AstraeaOrchestrator as ao
 from csv import writer
 
 
-# pd.set_option('display.max_colwidth', None)
-# pd.set_option("precision", 1)
-# pd.options.display.float_format = '{:.1f}'.format
-# sns.set(style='whitegrid', rc={"grid.linewidth": 0.1})
-# sns.set_context("paper", font_scale=2.2)                                                  
-# color = sns.color_palette("Set2", 2)
+pd.set_option('display.max_colwidth', None)
+pd.set_option("precision", 1)
+pd.options.display.float_format = '{:.1f}'.format
+sns.set(style='whitegrid', rc={"grid.linewidth": 0.1})
+sns.set_context("paper", font_scale=2.2)                                                  
+color = sns.color_palette("Set2", 2)
 
 
-# ## Astraea parameters
-# reward_field = "Var_sum"
-# confidence = 0.95
+## Astraea parameters
+reward_field = "Var_sum"
+confidence = 0.95
 
-# parser = SafeConfigParser()
-# parser.read('../conf/astraea-config.ini')
-# period = int(parser.get('application_plane', 'Period'))
-# span_states_file_txt = parser.get('application_plane', 'SpanStatesFileTxt')
+parser = SafeConfigParser()
+parser.read('../conf/astraea-config.ini')
+period = int(parser.get('application_plane', 'Period'))
+span_states_file_txt = parser.get('application_plane', 'SpanStatesFileTxt')
 
   
   
@@ -108,7 +110,7 @@ class AstraeaControllerEval():
                 span_counts.append(len(trace["spans"]), epoch)
 
             self.append_to_csv("results/{}-tracesizes.csv".format(experimentID), span_counts)
-            print("Saved trace sizes")
+            print("******* Saved trace sizes with mean ", np.mean(span_counts, axis=0))
 
 
             ### sampling policy
@@ -117,6 +119,8 @@ class AstraeaControllerEval():
                 for line in samplingPolicy:
                     name, var = line.partition(" ")[::2]
                     sampling_policies.append([name.strip(), float(var), epoch])
+                    if name == problem_now:
+                        print("******* Problem's sampling policy ",name, " : ", var)
             
 
             self.append_to_csv("results/{}-probability.csv".format(experimentID), span_counts)
