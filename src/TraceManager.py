@@ -177,7 +177,7 @@ class TraceManager():
                         for elem in self.concurrent_children[span_now]:
                             estimates_before = elem["max"]
                             
-                            print("Was children before so check estimates for " , traceID, span_now, elem, estimates_before)
+                            # print("Was children before so check estimates for " , traceID, span_now, elem, estimates_before)
                             if not isinstance(estimates_before[estimates_before!=0], int):
                                 child_lat_before += estimates_before[estimates_before!=0].mean()
                             else:
