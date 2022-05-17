@@ -20,7 +20,7 @@ import os
 import subprocess
 
 import sys
-sys.path.insert(0, '../src')
+sys.path.append('../src/')
 import AstraeaController as astraeaController
 
 
