@@ -187,7 +187,7 @@ class TraceManager():
 
                     else: ## this leaf was always a leaf
                         ## sum local observations
-                        print("local span update", span_now, G.nodes[x]['node'].latency, self.concurrent_children[span_now])
+                        print("local span update", span_now, G.nodes[x]['node'].latency)
                         local_span_stats[span_now] = local_span_stats.get(span_now,0) + G.nodes[x]['node'].latency
                         local_span_count[span_now] = local_span_count.get(span_now,0) + 1
                     
