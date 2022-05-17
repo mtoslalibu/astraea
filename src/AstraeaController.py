@@ -91,7 +91,7 @@ def main():
         print("Finished epoch ", epoch)
         time.sleep(period)
 
-class AstraeaController:
+class AstraeaController():
     def __init__(self):
         print("Init")
 
