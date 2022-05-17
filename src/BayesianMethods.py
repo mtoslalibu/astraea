@@ -84,11 +84,13 @@ class ABE():
             self.max_reward_queue.appendleft(df_traces[self.reward_field].max())
 
             print("max_reward_queue: ",self.max_reward_queue )
-            if not isinstance(self.max_reward_queue,int):
-                self.max_RMEAN = self.max_reward_queue[self.max_reward_queue!=0].mean()
+            max_rew_estimate = self.max_reward_queue[self.max_reward_queue!=0]
+            if not isinstance(max_rew_estimate,int):
+                self.max_RMEAN = max_rew_estimate.mean()
             else:
                 print("Integer for now")
-                self.max_RMEAN = self.max_reward_queue[self.max_reward_queue!=0]
+                self.max_RMEAN = max_rew_estimate
+
 
         set_spans_now = set(df_traces["Name"])
         ## get difference with orig spans in the first round
