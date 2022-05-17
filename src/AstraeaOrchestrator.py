@@ -35,20 +35,32 @@ class AstraeaOrc():
         f_write.close()
 
     def issue_sampling_policy_txt(self, splits):
+        ## check if remained in splits
+        used = set()
+
         # opening the file in read mode
         file = open(self.span_states_file_txt, "r")
         replacement = ""
+
         # using the for loop
         for line in file:
             line = line.strip()
             line_arr = line.split(" ")
             if line_arr[0] in splits:
                 changes = line.replace(line_arr[1], str(splits[line_arr[0]]))
+                used.add(line_arr[0])
             else:
                 changes = line
             
         #     changes = line.replace("hardships", "situations")
             replacement = replacement + changes + "\n"
+
+        ## there is some new spans in split
+        remaining = list(set(splits.keys()) - set(used))
+        if len(remaining) > 0:
+            for item in remaining:
+                print("*-*-*-*-*-* Adding new span ", item, splits[item])
+                replacement = replacement + item + " " + str(splits[item]) + "\n"
 
 
         file.close()
