@@ -9,7 +9,7 @@ a) Traffic split of spans, b) traces sizes after each period
 import sys
 sys.path.append('../src/')
 
-import AstraeaControllerEval  as aee
+import AstraeaControllerEval as ace
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -92,13 +92,15 @@ def main():
     cmd_inject = "echo {} > {}".format(problem_now,sleepPath)
     print("Injecting problem: ", cmd_inject)
     os.system(cmd_inject)
-    print("Check content now: ", os.system("cat {}".format(sleepPath)))
+    print("Check content now: ", os.system("head -n 3 {}".format(sleepPath)))
 
     ## sleep for a bit
     time.sleep(period + 10)
 
+    print("Woke up and running Astraea Controller")
+
     ## run Astraea and collect stats with problem_now
-    astraeaCont = astraeaController.AstraeaController()
+    astraeaCont = ace.AstraeaController()
     astraeaCont.run_with_evaluator(problem_now, totalExpDuration)
 
 
