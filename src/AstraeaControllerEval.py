@@ -53,7 +53,7 @@ class AstraeaControllerEval():
         if not CHECK_FOLDER:
             os.makedirs(resultDir)
             print("created folder : ", resultDir)
-            
+
         # The data assigned to the list e.g., list_data=[['03','Smith','Science'], ...]
         # First, open the old CSV file in append mode, hence mentioned as 'a'
         # Then, for the CSV file, create a file object
@@ -66,7 +66,7 @@ class AstraeaControllerEval():
             # Close the file object
             f_object.close()
 
-    def run_with_evaluator(self, problem_now,totalExpDuration,resultDir="result"):
+    def run_with_evaluator(self, problem_now,totalExpDuration,resultDir="result", elim_percentile = 0):
         
 
         time.sleep(period)
@@ -75,7 +75,7 @@ class AstraeaControllerEval():
         experimentID = "Experiment-{}-{}".format(problem_now, random.randint(0,99))
         print("---- Astraea {} evaluator started!".format(experimentID))   
 
-        bandit = banditalg.ABE("ABE", experimentID, confidence=confidence, reward_field = reward_field)
+        bandit = banditalg.ABE("ABE", experimentID, confidence=confidence, reward_field = reward_field, elim_percentile = elim_percentile)
         astraeaOrc = ao.AstraeaOrc()
         astraeaMan = traceManager.TraceManager()
 

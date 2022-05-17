@@ -156,8 +156,10 @@ class ABE():
         
         ## If zero, mean
         if self.elim_percentile == 0:
+            print("Calculating mean")
             median = np.mean(means)
         else: ## else given percentile!
+            print("Calculating percentile ", self.elim_percentile)
             median = np.percentile(means, self.elim_percentile)
         
         ## sort estimates by value
