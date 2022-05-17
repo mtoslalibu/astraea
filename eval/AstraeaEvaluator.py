@@ -101,7 +101,7 @@ def main():
     print("Check content now: ", os.system("head -n 3 {}".format(sleepPath)))
 
     ## sleep for a bit
-    time.sleep(period + 10)
+    time.sleep(period + 15)
 
     print("Woke up and running Astraea Controller")
 

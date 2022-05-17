@@ -46,7 +46,7 @@ class TraceManager():
         
         end=current_milli_time()
         ## adjust time -- delayed batch by 10 sec
-        delayed_sec = 10
+        delayed_sec = 15
         end = end - delayed_sec * 1000000
 
         ## period for lookback
@@ -176,8 +176,12 @@ class TraceManager():
                         child_lat_before = 0
                         for elem in self.concurrent_children[span_now]:
                             estimates_before = elem["max"]
-                            print("Was children before so check estimates for " ,  span_now, elem, estimates_before)
-                            child_lat_before += estimates_before[estimates_before!=0].mean()
+                            
+                            print("Was children before so check estimates for " , traceID, span_now, elem, estimates_before)
+                            if not isinstance(estimates_before[estimates_before!=0], int):
+                                child_lat_before += estimates_before[estimates_before!=0].mean()
+                            else:
+                                child_lat_before += estimates_before[estimates_before!=0]
 
                         local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - child_lat_before
                         local_span_count[span_now] = local_span_count.get(span_now,0) + 1
