@@ -159,7 +159,7 @@ class AstraeaController:
             for trace in all_traces["data"]:
                 span_counts.append(len(trace["spans"]), epoch)
 
-            self.append_to_csv("{}-tracesizes.csv".format(experimentID), span_counts)
+            self.append_to_csv("results/{}-tracesizes.csv".format(experimentID), span_counts)
             print("Saved trace sizes")
 
 
@@ -171,7 +171,7 @@ class AstraeaController:
                     sampling_policies.append([name.strip(), float(var), epoch])
             
 
-            self.append_to_csv("{}-probability.csv".format(experimentID), span_counts)
+            self.append_to_csv("results/{}-probability.csv".format(experimentID), span_counts)
             print("Saved sampling probabilities")
 
             time.sleep(period)

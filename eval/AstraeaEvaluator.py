@@ -92,8 +92,6 @@ def main():
     ## run Astraea and collect stats with problem_now
     astraeaCont = AstraeaController()
     astraeaCont.run_with_evaluator(problem_now, totalExpDuration)
-    
-
 
 
 
