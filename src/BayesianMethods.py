@@ -118,18 +118,14 @@ class ABE():
                     temp_R = self.max_RMEAN
                 
                 ##batched update
-#                 print("binom: ", temp_R/self.max_RMEAN, " for span: ", key)
-                ## update by 1
 
-                # successes = np.sum(np.random.binomial(1, temp_R/self.max_RMEAN,1))
+                # successes = np.sum(np.random.binomial(1, temp_R/self.max_RMEAN,1)) ## update by 1 no matter the sample size
                 successes = np.sum(np.random.binomial(1, temp_R/self.max_RMEAN,int(count/30))) ## for each 30 samples, we update by 1
-#                 if key == self.controlled_span:
-                print("")
+
                 print(key, "temp_R", temp_R, "temp_R/self.max_RMEAN", temp_R/self.max_RMEAN, 
                     "count", count, "successes", successes, 
                     "alpha_spans", self.alpha_spans[key], "beta_spans", self.beta_spans[key])
-#                 print(key, temp_R/self.max_RMEAN, count, successes)
-#                 successes = np.sum(np.random.binomial(1, temp_R/self.max_RMEAN,count))
+#                 successes = np.sum(np.random.binomial(1, temp_R/self.max_RMEAN,count)) ## update by N for N samples
                 
                 ## exponentially weighte updates
 #                 self.alpha_spans[key] = (1-self.exp_lambda)*self.alpha_spans[key]  + self.exp_lambda * successes 
@@ -144,8 +140,6 @@ class ABE():
                 self.beta_spans[key] += (int(count/30)-successes) #* (self.prev_traf.get(key,1)/100)
 
 
-                
-        
         ### estimate median, means//
 #         print(self.alpha_spans)
         ### we conduct thompson sampling and construct probabilities of spans
