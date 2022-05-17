@@ -21,7 +21,7 @@ import subprocess
 
 import sys
 sys.path.insert(0, '../src')
-import AstraeaController as AstraeaController
+import AstraeaController as astraeaController
 
 
 
@@ -94,7 +94,7 @@ def main():
     time.sleep(period + 10)
 
     ## run Astraea and collect stats with problem_now
-    astraeaCont = AstraeaController()
+    astraeaCont = astraeaController.AstraeaController()
     astraeaCont.run_with_evaluator(problem_now, totalExpDuration)
 
 
