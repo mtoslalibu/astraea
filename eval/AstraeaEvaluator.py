@@ -82,7 +82,7 @@ def main():
     print("---- Astraea evaluation started! Parameters are a) period: ", period, " b) total: ", totalExpDuration)
 
     ## first make sure sampling policy is revert to default (100 per span)
-    cmd_cp = "cp {} {}".format(samplingPolicy, samplingPolicyDefault)
+    cmd_cp = "cp {} {}".format(samplingPolicyDefault, samplingPolicy)
     print("sampling policy is revert to default: ", cmd_cp)
     os.system(cmd_cp)
     print("Check it out ", os.system("head -n 3 {}".format(samplingPolicy)))
@@ -112,4 +112,8 @@ def main():
 
 # __name__
 if __name__=="__main__":
-    main()
+    os.setpgrp() # create new process group, become its leader
+    try:
+        main()
+    finally:
+        os.killpg(0, signal.SIGKILL) # kill all processes in my group
