@@ -30,7 +30,7 @@ class TraceManager():
         self.period = parser.get('application_plane', 'Period')
 
         self.concurrent_children = {} ### key and list of children names e.g., "spanA" : [{children: ("spanB", "spanC", "spanD"), max = [12,11,10,11,11]
-        self.children_moving_window = 100
+        self.children_moving_window = 10
 
     ## get traces from API, given service and lookback period
     def get_traces_jaeger_api(self,service = "compose-post-service"):
@@ -171,7 +171,7 @@ class TraceManager():
 
                 if G.out_degree(x)==0: ###leaves
 
-                    ## check if it has any concurrent children more than 1 (i.e., disabled children)
+                    ## check if it has any children before (i.e., disabled children)
                     if span_now in self.concurrent_children: ## it had children before so extract the children estimate
                         child_lat_before = 0
                         for elem in self.concurrent_children[span_now]:
@@ -179,73 +179,87 @@ class TraceManager():
 
                             max_estimate = [i for i in estimates_before if i > 0]
                             child_lat_before += np.mean(max_estimate)
-                            
-                            # # print("Was children before so check estimates for " , traceID, span_now, elem, estimates_before)
-                            # if not isinstance(estimates_before[estimates_before!=0], int):
-                            #     child_lat_before += estimates_before[estimates_before!=0].mean()
-                            # else:
-                            #     child_lat_before += estimates_before[estimates_before!=0]
 
                         local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - child_lat_before
                         local_span_count[span_now] = local_span_count.get(span_now,0) + 1
-                        print("***** This leaf used to have child", span_now, G.nodes[x]['node'].latency - child_lat_before, " see child ",  self.concurrent_children[span_now])
+                        print("***** This leaf used to have child", span_now, " lat: ", G.nodes[x]['node'].latency, " self:" , G.nodes[x]['node'].latency - child_lat_before, " see child ",  self.concurrent_children[span_now])
 
-                    else:
+                    else: ## this leaf was always a leaf
                         ## sum local observations
                         local_span_stats[span_now] = local_span_stats.get(span_now,0) + G.nodes[x]['node'].latency
                         local_span_count[span_now] = local_span_count.get(span_now,0) + 1
                     
                     local_span_max[span_now] = G.nodes[x]['node'].latency if G.nodes[x]['node'].latency > local_span_max.get(span_now,0) else local_span_max.get(span_now,0)
-                    
                     local_span_min[span_now] = G.nodes[x]['node'].latency if G.nodes[x]['node'].latency < local_span_min.get(span_now,0) else local_span_min.get(span_now,0)
 
                 else: ## intermediate spans
-                    span_child =nx.dfs_successors(G, source=x, depth_limit=1)
+                    span_child =nx.dfs_successors(G, source=x, depth_limit=1) ## get all immediate children
                     
                     child_lat = 0
-                    ## check concurrency
+                    ## for concurrency
                     child_dict = {}
-                    # print(span_child)
-                    ## span_child = span_now : [children]
+                    
                     for key, values in span_child.items():
-                        # print(key, values)
 
                         if len(values) > 1:
                             for val in values:
                                 child_dict[G.nodes[val]['node'].name + "_start"] = G.nodes[val]['node'].start
                                 child_dict[G.nodes[val]['node'].name + "_end"] = G.nodes[val]['node'].end
 
-                        else:
-                            child_lat = child_lat + G.nodes[values[0]]['node'].latency
-                            # print("-=-= Tek child: ", G.nodes[values[0]]['node'].name, " duration: ", child_lat)
-
+                        else: ## either always 1 child, or other children are disabled 
+                            child_lat = G.nodes[values[0]]['node'].latency ## get current child's latency
                             child_now  = G.nodes[values[0]]['node'].name
-                            # print("Child now ", child_now)
+                            print("-=-= Tek child: ", child_now, " duration: ", child_lat)
 
-                            ## if this is the first time for parent span!!!, let's update our oracle_child_map with single child
+                            ## first time observing parent span!!!, let's update our oracle concurrent_children with single child
                             if span_now not in self.concurrent_children:
-                                self.concurrent_children[span_now] = [{"children":set([G.nodes[values[0]]['node'].name]), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}]
+                                self.concurrent_children[span_now] = [{"children":set([child_now]), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}]
+                                # child_lat = child_lat + G.nodes[values[0]]['node'].latency
                                 self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
-
+                            
                                 # print(span_now, "     Added this sppan for first time, ", self.concurrent_children[span_now])
 
-                            ## if we seen parent span, then try to find this children
-                            else:
+                            
+                            else: ## 1 child now but could have other children
                                 child_found_before = False
                                 ## iterate children and see if it is there!
                                 for item in self.concurrent_children[span_now]:
-                                    if child_now in item["children"]:
+                                    if child_now in item["children"]: ## concurren
                                         child_found_before = True
                                         item["max"].appendleft(child_lat) ## update its latency estimator
+                                    else: ### there are other sequential children so self segment should be estimated
+                                        
+                                        estimates_before = item["max"]
+                                        max_estimate = [i for i in estimates_before if i > 0]
+                                        child_lat += np.mean(max_estimate)
+
+                                        print("-=-=- there were other squential children disabled with ", np.mean(max_estimate))
 
                                 if not child_found_before:
-                                    # print("We did not see this single child before")
+                                    print("We did not see this single child before ", 0/0)
+                                    
                                     obj = {"children":set([G.nodes[values[0]]['node'].name]), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}
                                     obj["max"].appendleft(child_lat)
                                     self.concurrent_children[span_now].append(obj)
 
+                                # local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - child_lat
+                                # local_span_count[span_now] = local_span_count.get(span_now,0) + 1
+
+                                print("***** This span with one child", span_now, " lat: ", G.nodes[x]['node'].latency, " self:" , G.nodes[x]['node'].latency - child_lat, " see child ",  self.concurrent_children[span_now])
+
                         ## concurrent and sequential breakdown of children for self_segment analysis
                         if child_dict:
+
+
+                            ### if span_now exists in our estimator let's update child latency
+                            ### if not, it is the first time seeing it so measure and extract
+                            if span_now in self.concurrent_children:
+                                for item in self.concurrent_children[span_now]:
+                                    estimates_before = item["max"]
+                                    max_estimate = [i for i in estimates_before if i > 0]
+                                    child_lat += np.mean(max_estimate)
+                                print("-=-=- Estimating children contribution from previous rounds ", child_lat)
+
                             spans_processes = []
                             most_start = 0
                             ## sort children dict by values
@@ -268,19 +282,16 @@ class TraceManager():
                                     spans_processes.remove(key.split("_end")[0]+"_start")
                                     ## if we do not have any elements in the list, then set most end
                                     if len(spans_processes) == 0: 
-                                        child_lat = child_lat + (value - most_start)
-                                        # print("*** Check child : ", key, " , duration: ", (value - most_start), ' ,total dur: ' , child_lat)
+                                        # child_lat = child_lat + (value - most_start) ## value = end_timestamp
+                                        print("*** Check child : ", key, " , duration: ", (value - most_start), ' ,total dur: ' , child_lat)
 
-                                        ### update child latency estimator
-                                        # self.concurrent_children[span_now]["max"].appendleft(value - most_start)
-
-                                        # print("Checking: ", self.concurrent_children.get(span_now, "None!"))
-                                        # print("Active spans: ", active_children)
 
                                         ## if this is the first time for parent span!!!, let's update our oracle_child_map
                                         if span_now not in self.concurrent_children:
                                             self.concurrent_children[span_now] = [{"children":set(active_children), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}]
                                             self.concurrent_children[span_now][0]["max"].appendleft(value - most_start)
+
+                                            child_lat += value - most_start
                                             # print("First time added span check children ", self.concurrent_children[span_now])
 
                                         ## if we saw parent span before, then try to find its children
@@ -288,21 +299,25 @@ class TraceManager():
                                             child_found_before = False
                                             ## iterate children and see if it is there!
                                             for item in self.concurrent_children[span_now]:
-                                                if not set(active_children).isdisjoint(item["children"]): ## yes we have some common elements for active children -- so adding to concurrent list
+                                                ## yes we have some common elements for active children -- so adding to concurrent list
+                                                if not set(active_children).isdisjoint(item["children"]): 
                                                     # print("Yes we have some common elements for active children and previous children from map")
                                                     child_found_before = True
                                                     item["max"].appendleft(value - most_start) ## update its latency estimator
 
+
                                                     for active_diff in list(set(active_children) - item["children"]): ## add mnissing elements if any
-                                                        # print("Active diff now, ", active_diff)
+                                                        print("-=-=-=-=-!!!Active diff now, ", active_diff)
                                                         item["children"].add(active_diff)
+                                                # else: ### sequential children from before
 
-
+                                            ### We have observed this parent before but no child like this :/
                                             if not child_found_before:
-                                                # print("We do not have any commons, so creating sequential child")
+                                                print("-=-=-=-We do not have any commons, so creating sequential child", active_children, 0/0)
                                                 obj = {"children":set(active_children), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}
                                                 obj["max"].appendleft(value - most_start)
                                                 self.concurrent_children[span_now].append(obj)
+                                                child_lat += value - most_start
 
                                         most_start = 0
                                         
