@@ -90,7 +90,7 @@ class TraceManager():
             G = nx.DiGraph()
             G_spannames = nx.DiGraph()
             traceID = trace["traceID"]
-            # print("Working on TraceID " ,traceID)
+            print("Working on TraceID " ,traceID)
             span_ids = []
         
             for span in trace["spans"]:
@@ -162,7 +162,7 @@ class TraceManager():
                     continue
                     
                 span_now = G.nodes[x]['node'].name   
-                # print("\n---Main span now: ", span_now, " , duration", G.nodes[x]['node'].latency, " id ", G.nodes[x]['node'].id)
+                print("\n---Main span now: ", span_now, " , duration", G.nodes[x]['node'].latency, " id ", G.nodes[x]['node'].id)
                 
                 if G.in_degree(x) == 0: ## root
                     end_to_end_lats.append(G.nodes[x]['node'].latency)
