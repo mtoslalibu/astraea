@@ -180,14 +180,14 @@ class TraceManager():
                             max_estimate = [i for i in estimates_before if i > 0]
                             child_lat_before += np.mean(max_estimate)
 
-                        print("local span update", span_now, G.nodes[x]['node'].latency, G.nodes[x]['node'].latency - child_lat_before)
+                        print("local span update", span_now, G.nodes[x]['node'].latency, G.nodes[x]['node'].latency - child_lat_before, self.concurrent_children[span_now])
                         local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - child_lat_before
                         local_span_count[span_now] = local_span_count.get(span_now,0) + 1
                         print("***** This leaf used to have child", span_now, " lat: ", G.nodes[x]['node'].latency, " self:" , G.nodes[x]['node'].latency - child_lat_before, " see child ",  self.concurrent_children[span_now])
 
                     else: ## this leaf was always a leaf
                         ## sum local observations
-                        print("local span update", span_now, G.nodes[x]['node'].latency)
+                        print("local span update", span_now, G.nodes[x]['node'].latency, self.concurrent_children[span_now])
                         local_span_stats[span_now] = local_span_stats.get(span_now,0) + G.nodes[x]['node'].latency
                         local_span_count[span_now] = local_span_count.get(span_now,0) + 1
                     
@@ -326,7 +326,7 @@ class TraceManager():
 
                                         most_start = 0
                                         
-                    print("local span update", span_now, G.nodes[x]['node'].latency, G.nodes[x]['node'].latency - child_lat)
+                    print("local span update", span_now, G.nodes[x]['node'].latency, G.nodes[x]['node'].latency - child_lat, self.concurrent_children[span_now])
                     local_span_stats[span_now] = local_span_stats.get(span_now,0) + G.nodes[x]['node'].latency - child_lat
                     local_span_count[span_now] = local_span_count.get(span_now,0) + 1
     #                 print("Parent now: ", span_now, " new duration: ", local_span_stats[span_now])
