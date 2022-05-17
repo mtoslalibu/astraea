@@ -5,6 +5,11 @@ This program runs demo experiments.
 Evaluation data:
 a) Traffic split of spans, b) traces sizes after each period
 """
+
+import sys
+sys.path.append('../src/')
+
+import AstraeaControllerEval  as aee
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -19,9 +24,7 @@ from configparser import SafeConfigParser
 import os
 import subprocess
 
-import sys
-sys.path.append('../src/')
-import AstraeaController.AstraeaControllerEval as astraeaController
+
 
 
 
