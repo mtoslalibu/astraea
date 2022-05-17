@@ -54,13 +54,13 @@ app = parser.get('experimentation_plane', 'Application')
 
 ## app specific parameter
 if app == "SocialNetwork":
-    all_spans = open("../data/{}".format(parser.get('experimentation_plane', 'WorkloadGeneratorPathSN')), "r")
+    all_spans = open("../data/{}".format(parser.get('experimentation_plane', 'AllSpansSN')), "r")
     workloadPath = parser.get('experimentation_plane', 'WorkloadGeneratorPathSN')
 elif app == "Media":
-    all_spans = open("../data/{}".format(parser.get('experimentation_plane', 'WorkloadGeneratorPathMedia')), "r")
+    all_spans = open("../data/{}".format(parser.get('experimentation_plane', 'AllSpansMedia')), "r")
     workloadPath = parser.get('experimentation_plane', 'WorkloadGeneratorPathMedia')
 else:
-    all_spans = open("../data/{}".format(parser.get('experimentation_plane', 'WorkloadGeneratorPathTT')), "r")
+    all_spans = open("../data/{}".format(parser.get('experimentation_plane', 'AllSpansTT')), "r")
     workloadPath = parser.get('experimentation_plane', 'WorkloadGeneratorPathTT')
 
 
