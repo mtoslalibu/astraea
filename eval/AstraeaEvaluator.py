@@ -80,14 +80,15 @@ def main():
     cmd_cp = "cp {} {}".format(samplingPolicy, samplingPolicyDefault)
     print("sampling policy is revert to default: ", cmd_cp)
     os.system(cmd_cp)
+    print("Check it out ", os.system("head -n 3 {}".format(samplingPolicy)))
 
     ## start sending requests
-    cmd_wrk = ".{}/wrk -D exp -t 4 -c 4 -d {} -L -s ./scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R {}".format(workloadPath, totalExpDuration, qps)
+    cmd_wrk = "{}/wrk -D exp -t 4 -c 4 -d {} -L -s {}/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R {}".format(workloadPath, totalExpDuration, workloadPath, qps)
     print("Sending req in background: ", cmd_wrk)
     process = subprocess.Popen(cmd_wrk, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     ### Inject problem
-    problem_now = random.choice(list)
+    problem_now = random.choice(all_spans_list)
     cmd_inject = "echo {} > {}".format(problem_now,sleepPath)
     print("Injecting problem: ", cmd_inject)
     os.system(cmd_inject)
