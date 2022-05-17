@@ -24,6 +24,7 @@ from configparser import SafeConfigParser
 import os
 import subprocess
 import atexit
+import signal
 
 
 pd.set_option('display.max_colwidth', None)
