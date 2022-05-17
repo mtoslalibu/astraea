@@ -82,11 +82,11 @@ class ABE():
         if len(df_traces) > 1:
 
             self.max_reward_queue.appendleft(df_traces[self.reward_field].max())
-            
+
             print("max_reward_queue: ",self.max_reward_queue )
             max_rew_estimate = [i for i in self.max_reward_queue if i > 0]
             print("Max rew estimate ", max_rew_estimate )
-            self.max_RMEAN = max_rew_estimate.mean()
+            self.max_RMEAN = np.mean(max_rew_estimate)
 
 
 

@@ -178,7 +178,7 @@ class TraceManager():
                             estimates_before = elem["max"]
 
                             max_estimate = [i for i in estimates_before if i > 0]
-                            child_lat_before += max_estimate.mean()
+                            child_lat_before += np.mean(max_estimate)
                             
                             # # print("Was children before so check estimates for " , traceID, span_now, elem, estimates_before)
                             # if not isinstance(estimates_before[estimates_before!=0], int):
