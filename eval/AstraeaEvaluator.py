@@ -48,6 +48,8 @@ sleepPath = parser.get('experimentation_plane', 'SleepInjectionPath')
 
 qps = int(parser.get('experimentation_plane', 'QPS'))
 
+resultDir = parser.get('experimentation_plane', 'ResultDir')
+
 app = parser.get('experimentation_plane', 'Application')
 
 ## app specific parameter
@@ -107,7 +109,7 @@ def main():
 
     ## run Astraea and collect stats with problem_now
     astraeaCont = ace.AstraeaControllerEval()
-    astraeaCont.run_with_evaluator(problem_now, totalExpDuration)
+    astraeaCont.run_with_evaluator(problem_now, totalExpDuration,resultDir)
 
 
 

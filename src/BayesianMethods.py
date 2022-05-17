@@ -29,7 +29,7 @@ class ABE():
     Pseudo-code can be found in our paper.
     """
 
-    def __init__(self, algorithm , experiment_id, confidence, reward_field, epsilon = 5, exp_lambda = 0.5, controlled_span = "None"):
+    def __init__(self, algorithm , experiment_id, confidence, reward_field, epsilon = 5, exp_lambda = 0.5, controlled_span = "None", elim_percentile = 0):
         self.name = algorithm
         self.experiment_id = experiment_id
         
@@ -49,6 +49,7 @@ class ABE():
         self.controlled_span = controlled_span
         self.reward_moving_average_window = 10 ## last N periods
         self.max_reward_queue = deque([0]*self.reward_moving_average_window,maxlen=self.reward_moving_average_window)
+        self.elim_percentile = elim_percentile
         
         
     def set_mc_sample(self, sample_count):
@@ -153,8 +154,11 @@ class ABE():
         ## sort results and return
         sorted_keys = {k: v for k, v in sorted(sorted_keys.items(), key=lambda item: item[1],reverse=True)}
         
-        ## Both median and mean can be used
-        median = np.mean(means)
+        ## If zero, mean
+        if self.elim_percentile == 0:
+            median = np.mean(means)
+        else: ## else given percentile!
+            median = np.percentile(means, self.elim_percentile)
         
         ## sort estimates by value
         any_removed = []

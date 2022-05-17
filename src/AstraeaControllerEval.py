@@ -37,6 +37,7 @@ parser.read('../conf/astraea-config.ini')
 period = int(parser.get('application_plane', 'Period'))
 span_states_file_txt = parser.get('application_plane', 'SpanStatesFileTxt')
 
+
   
   
 # print("***** Welcome to Astraea!")
@@ -45,7 +46,14 @@ class AstraeaControllerEval():
     def __init__(self):
         print("Init")
 
-    def append_to_csv(self, file_name, list_data):
+    def append_to_csv(self, resultDir, file_name, list_data):
+
+        CHECK_FOLDER = os.path.isdir(resultDir)
+        # If folder doesn't exist, then create it.
+        if not CHECK_FOLDER:
+            os.makedirs(resultDir)
+            print("created folder : ", resultDir)
+            
         # The data assigned to the list e.g., list_data=[['03','Smith','Science'], ...]
         # First, open the old CSV file in append mode, hence mentioned as 'a'
         # Then, for the CSV file, create a file object
@@ -58,7 +66,7 @@ class AstraeaControllerEval():
             # Close the file object
             f_object.close()
 
-    def run_with_evaluator(self, problem_now,totalExpDuration):
+    def run_with_evaluator(self, problem_now,totalExpDuration,resultDir="result"):
         
 
         time.sleep(period)
@@ -110,7 +118,7 @@ class AstraeaControllerEval():
             for trace in all_traces["data"]:
                 span_counts.append([len(trace["spans"]), epoch])
 
-            self.append_to_csv("results/{}-tracesizes.csv".format(experimentID), span_counts)
+            self.append_to_csv(resultDir, "{}/{}-tracesizes.csv".format(resultDir, experimentID), span_counts)
             print("******* Saved trace sizes with mean ", np.mean(span_counts, axis=0))
 
 
@@ -124,7 +132,7 @@ class AstraeaControllerEval():
                         print("******* Problem's sampling policy ",name.strip(), " : ", var)
             
 
-            self.append_to_csv("results/{}-probability.csv".format(experimentID), sampling_policies)
+            self.append_to_csv(resultDir, "{}/{}-probability.csv".format(resultDir, experimentID), sampling_policies)
             print("Saved sampling probabilities")
 
             time.sleep(period)
