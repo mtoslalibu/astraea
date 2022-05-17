@@ -30,17 +30,18 @@ class TraceManager():
         self.period = parser.get('application_plane', 'Period')
 
         self.concurrent_children = {} ### key and list of children names e.g., "spanA" : [{children: ("spanB", "spanC", "spanD"), max = [12,11,10,11,11]
-        self.children_moving_window = 5
+        self.children_moving_window = 100
 
     ## get traces from API, given service and lookback period
     def get_traces_jaeger_api(self,service = "compose-post-service"):
         """
-        Method for fetching traces from provided API.  
+        Method for fetching traces from JAEGER API.  
         """
         print("------ JAeger api called")
 
         # JaegerAPIEndpoint = "http://localhost:16686/api/traces?end={}&maxDuration&minDuration&service={}&start={}&prettyPrint=true"
-            ## get current time in jaeger format
+        
+        ## get current time in jaeger format
         current_milli_time = lambda: int(round(time.time() * 1000000))    
         
         end=current_milli_time()
@@ -59,7 +60,7 @@ class TraceManager():
         response_batch = requests.get(url = formatted_endpoint)
 
         data = response_batch.json()
-        print("# of traces: ",len(data["data"]))
+        print("# of traces in this batch: ",len(data["data"]))
         return data
         
     ### experimental method to calculate all stats for utility
@@ -112,15 +113,15 @@ class TraceManager():
         #                 print("url; " + url)
                         urlLastPart = url.split("/")[-1]
 
-                    if not is_server:
+                    if not is_server: # spans can be uniquely identified via svc+opName+url
                         key_now = trace["processes"][span["processID"]]["serviceName"] + ":" + span["operationName"] + ":" + url
-                    else:
+                    else: # spans can be uniquely identified via svc+opName
                         key_now = trace["processes"][span["processID"]]["serviceName"] + ":" + span["operationName"] 
                 ## if deathstar or uber traces -> keynow does not include url
                 else:
-                    if application_name == "SocialNetwork":
+                    if application_name == "SocialNetwork": ## spans can be uniquely identified via operation name
                         key_now = span["operationName"] 
-                    else: ## Media
+                    else: ## Media -- spans can be uniquely identified via svc+opName
                         key_now = trace["processes"][span["processID"]]["serviceName"] + ":" + span["operationName"] 
     #                 key_now = span["operationName"] 
                     
@@ -161,7 +162,7 @@ class TraceManager():
                     continue
                     
                 span_now = G.nodes[x]['node'].name   
-                print("\n---Main span now: ", span_now, " , duration", G.nodes[x]['node'].latency, " id ", G.nodes[x]['node'].id)
+                # print("\n---Main span now: ", span_now, " , duration", G.nodes[x]['node'].latency, " id ", G.nodes[x]['node'].id)
                 
                 if G.in_degree(x) == 0: ## root
                     end_to_end_lats.append(G.nodes[x]['node'].latency)
@@ -179,7 +180,7 @@ class TraceManager():
 
                         local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - child_lat_before
                         local_span_count[span_now] = local_span_count.get(span_now,0) + 1
-                        print("***** This span used to have children but now disabled ", span_now, " see child ",  self.concurrent_children[span_now])
+                        # print("***** This span used to have children but now disabled ", span_now, " see child ",  self.concurrent_children[span_now])
 
                     else:
                         ## sum local observations
@@ -196,7 +197,7 @@ class TraceManager():
                     child_lat = 0
                     ## check concurrency
                     child_dict = {}
-                    print(span_child)
+                    # print(span_child)
                     ## span_child = span_now : [children]
                     for key, values in span_child.items():
                         print(key, values)
@@ -208,7 +209,7 @@ class TraceManager():
 
                         else:
                             child_lat = child_lat + G.nodes[values[0]]['node'].latency
-                            print("-=-= Tek child: ", G.nodes[values[0]]['node'].name, " duration: ", child_lat)
+                            # print("-=-= Tek child: ", G.nodes[values[0]]['node'].name, " duration: ", child_lat)
 
                             child_now  = G.nodes[values[0]]['node'].name
                             # print("Child now ", child_now)
@@ -218,7 +219,7 @@ class TraceManager():
                                 self.concurrent_children[span_now] = [{"children":set([G.nodes[values[0]]['node'].name]), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}]
                                 self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
 
-                                print(span_now, "     Added this sppan for first time, ", self.concurrent_children[span_now])
+                                # print(span_now, "     Added this sppan for first time, ", self.concurrent_children[span_now])
 
                             ## if we seen parent span, then try to find this children
                             else:
@@ -230,20 +231,20 @@ class TraceManager():
                                         item["max"].appendleft(child_lat) ## update its latency estimator
 
                                 if not child_found_before:
-                                    print("We did not see this single child before")
+                                    # print("We did not see this single child before")
                                     obj = {"children":set([G.nodes[values[0]]['node'].name]), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}
                                     obj["max"].appendleft(child_lat)
                                     self.concurrent_children[span_now].append(obj)
 
-                        
+                        ## concurrent and sequential breakdown of children for self_segment analysis
                         if child_dict:
                             spans_processes = []
                             most_start = 0
-                            ## sort child dict by values
+                            ## sort children dict by values
                             child_dict = {k: v for k, v in sorted(child_dict.items(), key=lambda item: item[1])}
                             for key,value in child_dict.items():
 
-                                ## if first span then set most start time
+                                ## if first span then set the most start time
                                 if len(spans_processes) == 0:
                                     most_start = value
                                     active_children = []
@@ -255,42 +256,42 @@ class TraceManager():
 
                                     
                                 else:
-                                    ## remove the start tracepoint
+                                    ## remove the operation's start tracepoint
                                     spans_processes.remove(key.split("_end")[0]+"_start")
                                     ## if we do not have any elements in the list, then set most end
                                     if len(spans_processes) == 0: 
                                         child_lat = child_lat + (value - most_start)
-                                        print("*** Check child : ", key, " , duration: ", (value - most_start), ' ,total dur: ' , child_lat)
+                                        # print("*** Check child : ", key, " , duration: ", (value - most_start), ' ,total dur: ' , child_lat)
 
                                         ### update child latency estimator
                                         # self.concurrent_children[span_now]["max"].appendleft(value - most_start)
 
-                                        print("Checking: ", self.concurrent_children.get(span_now, "None!"))
-                                        print("Active spans: ", active_children)
+                                        # print("Checking: ", self.concurrent_children.get(span_now, "None!"))
+                                        # print("Active spans: ", active_children)
 
                                         ## if this is the first time for parent span!!!, let's update our oracle_child_map
                                         if span_now not in self.concurrent_children:
                                             self.concurrent_children[span_now] = [{"children":set(active_children), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}]
                                             self.concurrent_children[span_now][0]["max"].appendleft(value - most_start)
-                                            print("First time added span check children ", self.concurrent_children[span_now])
+                                            # print("First time added span check children ", self.concurrent_children[span_now])
 
-                                        ## if we seen parent span, then try to find this children
+                                        ## if we saw parent span before, then try to find its children
                                         else:
                                             child_found_before = False
                                             ## iterate children and see if it is there!
                                             for item in self.concurrent_children[span_now]:
                                                 if not set(active_children).isdisjoint(item["children"]): ## yes we have some common elements for active children -- so adding to concurrent list
-                                                    print("Yes we have some common elements for active children and previos children from map")
+                                                    # print("Yes we have some common elements for active children and previous children from map")
                                                     child_found_before = True
                                                     item["max"].appendleft(value - most_start) ## update its latency estimator
 
                                                     for active_diff in list(set(active_children) - item["children"]): ## add mnissing elements if any
-                                                        print("Active diff now, ", active_diff)
+                                                        # print("Active diff now, ", active_diff)
                                                         item["children"].add(active_diff)
 
 
                                             if not child_found_before:
-                                                print("We do not have any commons, so creating sequential child")
+                                                # print("We do not have any commons, so creating sequential child")
                                                 obj = {"children":set(active_children), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}
                                                 obj["max"].appendleft(value - most_start)
                                                 self.concurrent_children[span_now].append(obj)
@@ -318,7 +319,7 @@ class TraceManager():
             i = i + 1 
     # print("+Parsed traces", i)
 
-        ### e2e correlation and eta
+        ### e2e correlation and eta for utility evaluation purposes
     #     span_single = {}
     #     for item in span_stats:
     #         if item not in span_single:
@@ -353,7 +354,6 @@ class TraceManager():
             np.var(span_stats[item]),
             np.std(span_stats[item]),
             np.max(span_stats[item]),
-                
             ## summed variance, mean, std for repeating spans
             np.mean(span_stats_summed[item]), 
             np.var(span_stats_summed[item]), 
