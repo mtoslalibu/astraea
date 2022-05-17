@@ -59,7 +59,7 @@ class AstraeaControllerEval():
     def run_with_evaluator(self, problem_now,totalExpDuration):
         
 
-        time.sleep(period)
+        # time.sleep(period)
 
         # Astraea framework Initialized
         experimentID = "Experiment-{}-{}".format(problem_now, random.randint(0,99))

@@ -100,7 +100,7 @@ def main():
     print("Woke up and running Astraea Controller")
 
     ## run Astraea and collect stats with problem_now
-    astraeaCont = ace.AstraeaController()
+    astraeaCont = ace.AstraeaControllerEval()
     astraeaCont.run_with_evaluator(problem_now, totalExpDuration)
 
 
