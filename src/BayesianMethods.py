@@ -120,11 +120,11 @@ class ABE():
                 ##batched update
 
                 # successes = np.sum(np.random.binomial(1, temp_R/self.max_RMEAN,1)) ## update by 1 no matter the sample size
-                successes = np.sum(np.random.binomial(1, temp_R/self.max_RMEAN,int(count/30))) ## for each 30 samples, we update by 1
+                successes = np.sum(np.random.binomial(1, temp_R/self.max_RMEAN,int(count/30)+1)) ## for each 30 samples, we update by 1
 
-                print(key, "temp_R", temp_R, "temp_R/self.max_RMEAN", temp_R/self.max_RMEAN, 
-                    "count", count, "successes", successes, 
-                    "alpha_spans", self.alpha_spans[key], "beta_spans", self.beta_spans[key])
+                print(key, "rew", temp_R, "rew_rat", temp_R/self.max_RMEAN, 
+                    "cnt", count, "scs", successes, 
+                    "alpha", self.alpha_spans[key], "bata", self.beta_spans[key])
 #                 successes = np.sum(np.random.binomial(1, temp_R/self.max_RMEAN,count)) ## update by N for N samples
                 
                 ## exponentially weighte updates
@@ -137,7 +137,7 @@ class ABE():
                 
                 ## update by count
                 self.alpha_spans[key] += successes  #* (self.prev_traf.get(key,1)/100)
-                self.beta_spans[key] += (int(count/30)-successes) #* (self.prev_traf.get(key,1)/100)
+                self.beta_spans[key] += (int(count/30) + 1 -successes) #* (self.prev_traf.get(key,1)/100)
 
 
         ### estimate median, means//
