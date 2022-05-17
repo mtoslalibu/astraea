@@ -21,7 +21,7 @@ import subprocess
 
 import sys
 sys.path.insert(0, '../src')
-from src.AstraeaController import AstraeaController
+import AstraeaController as AstraeaController
 
 
 
