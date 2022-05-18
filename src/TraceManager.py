@@ -257,7 +257,7 @@ class TraceManager():
                         ### it has multipl children so more complex analysis;
                         ## concurrent and sequential breakdown of children for self_segment analysis
                         if child_dict:
-
+                            parent_seen_first_time = False
                             ### if span_now exists in our estimator let's measure previous observations and extract
                             ### if not, it is the first time seeing it so measure and extract
                             if span_now in self.concurrent_children:
@@ -301,15 +301,23 @@ class TraceManager():
 
                                             child_lat += value - most_start
                                             print("First time added parent span check children ", self.concurrent_children[span_now])
+                                            parent_seen_first_time = True
 
                                         ## if we saw parent span before, then try to find its children
                                         else:
+                                            if parent_seen_first_time: ## still first trace we see parent span; but new set of sequential
+                                                obj = {"children":set(active_children), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}
+                                                obj["max"].appendleft(value - most_start)
+                                                self.concurrent_children[span_now].append(obj)
+                                                child_lat += value - most_start
+                                                print("First/sec time added parent span check children ", self.concurrent_children[span_now])
+
                                             # child_found_before = False
-                                            ## iterate children and see if it is there!
+                                            ## iterate children and see if it is there concurrently!
                                             for item in self.concurrent_children[span_now]:
                                                 ## yes we have some common elements for active children -- so adding to concurrent list
                                                 if not set(active_children).isdisjoint(item["children"]): 
-                                                    # print("Yes we have some common elements for active children and previous children from map")
+                                                    print("Yes we have some common elements for active children and previous children from map")
                                                     # child_found_before = True
                                                     item["max"].appendleft(value - most_start) ## update its latency estimator
 
@@ -317,7 +325,8 @@ class TraceManager():
                                                     # for active_diff in list(set(active_children) - item["children"]): ## add mnissing elements if any
                                                     #     print("-=-=-=-=-!!!Active diff now, ", active_diff)
                                                     #     item["children"].add(active_diff)
-                                                # else: ### sequential children from before
+
+
 
                                             # ### We have observed this parent before but no child like this :/
                                             # if not child_found_before:
