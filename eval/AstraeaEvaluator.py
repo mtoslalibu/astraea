@@ -122,7 +122,6 @@ if __name__=="__main__":
 
     logging.basicConfig(
                     stream = sys.stdout,
-                    format = Log_Format,
                     level = logging.INFO)
 
     os.setpgrp() # create new process group, become its leader
