@@ -219,9 +219,9 @@ class TraceManager():
                             # child_lat should be extracted later in this code
                             if span_now not in self.concurrent_children:
                                 self.concurrent_children[span_now] = [{"children":set([child_now]), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}]
-                                # child_lat = child_lat + G.nodes[values[0]]['node'].latency
-                                self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
                                 child_lat = G.nodes[values[0]]['node'].latency ## get current child's latency
+                                self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
+
                                 print("???Added this sppan with one child for first time: ", span_now, self.concurrent_children[span_now])
                             
                             else: ## 1 child now but could have other children
