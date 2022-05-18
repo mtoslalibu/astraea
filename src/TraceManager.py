@@ -180,7 +180,7 @@ class TraceManager():
                             child_lat_before += np.mean(max_estimate)
 
                         print("local span update", span_now, G.nodes[x]['node'].latency, G.nodes[x]['node'].latency - child_lat_before, self.concurrent_children[span_now])
-                        local_span_stats[span_now] = local_span_stats.get(span_now,0) +  G.nodes[x]['node'].latency - child_lat_before
+                        local_span_stats[span_now] = local_span_stats.get(span_now,0) +  max(0,G.nodes[x]['node'].latency - child_lat_before)
                         local_span_count[span_now] = local_span_count.get(span_now,0) + 1
                         print("***** This leaf used to have child", span_now, " lat: ", G.nodes[x]['node'].latency, " self:" , G.nodes[x]['node'].latency - child_lat_before, " see child ",  self.concurrent_children[span_now])
 
@@ -213,7 +213,7 @@ class TraceManager():
                         else: ## either always had 1 child, or other children are disabled 
                             
                             child_now  = G.nodes[values[0]]['node'].name
-                            print("-=-= Tek child: ", child_now, " duration: ", child_lat)
+                            print("-=-= Tek child: ", child_now, " duration: ", G.nodes[values[0]]['node'].latency)
 
                             ## first time observing parent span!!!, let's update our oracle concurrent_children with single child
                             # child_lat should be extracted later in this code
@@ -301,7 +301,7 @@ class TraceManager():
                                         most_start = 0
                                         
                     print("local span update", span_now, G.nodes[x]['node'].latency, G.nodes[x]['node'].latency - child_lat, self.concurrent_children[span_now])
-                    local_span_stats[span_now] = local_span_stats.get(span_now,0) + G.nodes[x]['node'].latency - child_lat
+                    local_span_stats[span_now] = local_span_stats.get(span_now,0) + max(0,G.nodes[x]['node'].latency - child_lat)
                     local_span_count[span_now] = local_span_count.get(span_now,0) + 1
 
             ### sum repeating spans and add to span_stats
