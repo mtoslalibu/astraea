@@ -195,9 +195,11 @@ class TraceManager():
                     local_span_min[span_now] = G.nodes[x]['node'].latency if G.nodes[x]['node'].latency < local_span_min.get(span_now,0) else local_span_min.get(span_now,0)
 
                 else: ## intermediate spans
+                    ### Hard-coded check for Social Network repeating span.. The root and the very first child are identical so ignore it.
                     if span_now == "/wrk2-api/post/compose":
                         print("Hard coded for Social Network repeating span")
                         continue
+                    
                     span_child =nx.dfs_successors(G, source=x, depth_limit=1) ## get all immediate children
                     
                     child_lat = 0
@@ -205,18 +207,19 @@ class TraceManager():
                     child_dict = {}
                     
                     for key, values in span_child.items():
-
+                        # It has multiple children
                         if len(values) > 1:
                             for val in values:
                                 child_dict[G.nodes[val]['node'].name + "_start"] = G.nodes[val]['node'].start
                                 child_dict[G.nodes[val]['node'].name + "_end"] = G.nodes[val]['node'].end
 
-                        else: ## either always 1 child, or other children are disabled 
+                        else: ## either always had 1 child, or other children are disabled 
                             child_lat = G.nodes[values[0]]['node'].latency ## get current child's latency
                             child_now  = G.nodes[values[0]]['node'].name
                             print("-=-= Tek child: ", child_now, " duration: ", child_lat)
 
                             ## first time observing parent span!!!, let's update our oracle concurrent_children with single child
+                            # child_lat should be extracted later in this code
                             if span_now not in self.concurrent_children:
                                 self.concurrent_children[span_now] = [{"children":set([child_now]), "max":deque([0]*self.children_moving_window,maxlen=self.children_moving_window)}]
                                 # child_lat = child_lat + G.nodes[values[0]]['node'].latency
@@ -226,11 +229,11 @@ class TraceManager():
 
                             
                             else: ## 1 child now but could have other children
-                                child_found_before = False
+                                # child_found_before = False
                                 ## iterate children and see if it is there!
                                 for item in self.concurrent_children[span_now]:
                                     if child_now in item["children"]: ## concurren
-                                        child_found_before = True
+                                        # child_found_before = True
                                         item["max"].appendleft(child_lat) ## update its latency estimator
                                     else: ### there are other sequential children so self segment should be estimated
                                         
@@ -251,19 +254,19 @@ class TraceManager():
                                 # local_span_count[span_now] = local_span_count.get(span_now,0) + 1
 
                                 print("***** This span with one child", span_now, " lat: ", G.nodes[x]['node'].latency, " self:" , G.nodes[x]['node'].latency - child_lat, " see child ",  self.concurrent_children[span_now])
-
+                        ### it has multipl children so more complex analysis;
                         ## concurrent and sequential breakdown of children for self_segment analysis
                         if child_dict:
 
-
-                            ### if span_now exists in our estimator let's update child latency
+                            ### if span_now exists in our estimator let's measure previous observations and extract
                             ### if not, it is the first time seeing it so measure and extract
                             if span_now in self.concurrent_children:
                                 for item in self.concurrent_children[span_now]:
                                     estimates_before = item["max"]
                                     max_estimate = [i for i in estimates_before if i > 0]
                                     child_lat += np.mean(max_estimate)
-                                print("-=-=- Estimating children contribution from previous rounds ", child_lat)
+                                    print("-=-=- Estimating children contribution from previous rounds ",item["children"], np.mean(max_estimate))
+                                print("Done estimation, total contribution is: ", child_lat)
 
                             spans_processes = []
                             most_start = 0
@@ -297,23 +300,23 @@ class TraceManager():
                                             self.concurrent_children[span_now][0]["max"].appendleft(value - most_start)
 
                                             child_lat += value - most_start
-                                            # print("First time added span check children ", self.concurrent_children[span_now])
+                                            print("First time added parent span check children ", self.concurrent_children[span_now])
 
                                         ## if we saw parent span before, then try to find its children
                                         else:
-                                            child_found_before = False
+                                            # child_found_before = False
                                             ## iterate children and see if it is there!
                                             for item in self.concurrent_children[span_now]:
                                                 ## yes we have some common elements for active children -- so adding to concurrent list
                                                 if not set(active_children).isdisjoint(item["children"]): 
                                                     # print("Yes we have some common elements for active children and previous children from map")
-                                                    child_found_before = True
+                                                    # child_found_before = True
                                                     item["max"].appendleft(value - most_start) ## update its latency estimator
 
-
-                                                    for active_diff in list(set(active_children) - item["children"]): ## add mnissing elements if any
-                                                        print("-=-=-=-=-!!!Active diff now, ", active_diff)
-                                                        item["children"].add(active_diff)
+                                                    # Following piece was breaking the code, adding grand children to immediate children
+                                                    # for active_diff in list(set(active_children) - item["children"]): ## add mnissing elements if any
+                                                    #     print("-=-=-=-=-!!!Active diff now, ", active_diff)
+                                                    #     item["children"].add(active_diff)
                                                 # else: ### sequential children from before
 
                                             # ### We have observed this parent before but no child like this :/
