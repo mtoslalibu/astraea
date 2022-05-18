@@ -27,6 +27,11 @@ import atexit
 import signal
 import logging
 
+logging.basicConfig(
+                stream = sys.stdout,
+                level = logging.INFO)
+
+logger = logging.getLogger()
 
 pd.set_option('display.max_colwidth', None)
 pd.set_option("precision", 1)
@@ -69,60 +74,58 @@ else:
 
 
 all_spans_list = all_spans.read().split("\n")
-logging.debug(all_spans_list)
+logger.debug(all_spans_list)
 
 
-logging.info("***** Welcome to Astraea evaluator!")
+logger.info("***** Welcome to Astraea evaluator!")
 
   
 process = None
 def exit_handler():
-    logging.info('My application is ending!')
+    logger.info('My application is ending!')
     os.killpg(0, signal.SIGKILL)
  
-    logging.warning("Killed")
+    logger.warning("Killed")
 
 # Defining main function
 def main():
+    
     atexit.register(exit_handler)
 
-    logging.info("---- Astraea evaluation started! Parameters are a) period: ", period, " b) total: ", totalExpDuration)
+    logger.info("---- Astraea evaluation started! Parameters are a) period: ", period, " b) total: ", totalExpDuration)
 
     ## first make sure sampling policy is revert to default (100 per span)
     cmd_cp = "cp {} {}".format(samplingPolicyDefault, samplingPolicy)
-    logging.info("sampling policy is revert to default: ", cmd_cp)
+    logger.info("sampling policy is revert to default: ", cmd_cp)
     os.system(cmd_cp)
-    logging.info("Check it out ", os.system("head -n 3 {}".format(samplingPolicy)))
+    logger.info("Check it out ", os.system("head -n 3 {}".format(samplingPolicy)))
 
     ## start sending requests
     cmd_wrk = "{}/wrk -D exp -t {} -c {} -d {} -L -s {}/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R {}".format(workloadPath, workers,workers, totalExpDuration+100, workloadPath, qps)
-    logging.info("Sending req in background: ", cmd_wrk)
+    logger.info("Sending req in background: ", cmd_wrk)
     process = subprocess.Popen(cmd_wrk, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     ### Inject problem
     problem_now = random.choice(all_spans_list)
     cmd_inject = "echo {} > {}".format(problem_now,sleepPath)
-    logging.info("Injecting problem: ", cmd_inject)
+    logger.info("Injecting problem: ", cmd_inject)
     os.system(cmd_inject)
-    logging.info("Check content now: ", os.system("head -n 3 {}".format(sleepPath)))
+    logger.info("Check content now: ", os.system("head -n 3 {}".format(sleepPath)))
 
     ## sleep for a bit
     time.sleep(period + 15)
 
-    logging.info("Woke up and running Astraea Controller")
+    logger.info("Woke up and running Astraea Controller")
 
     ## run Astraea and collect stats with problem_now
     astraeaCont = ace.AstraeaControllerEval()
     astraeaCont.run_with_evaluator(problem_now, totalExpDuration,resultDir,elimPercentile)
 
 
-
 # __name__
 if __name__=="__main__":
 
-    logging.basicConfig(
-                    stream = sys.stdout,
-                    level = logging.INFO)
+
 
     os.setpgrp() # create new process group, become its leader
     main()
