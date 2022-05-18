@@ -63,7 +63,8 @@ class TraceManager():
         data = response_batch.json()
         print("# of traces in this batch: ",len(data["data"]))
         return data
-   def traces_to_df_with_self(self,all_traces_data, application_name = "SocialNetwork", all_enabled = False):
+
+    def traces_to_df_with_self(self,all_traces_data, application_name = "SocialNetwork", all_enabled = False):
         """
         Method for mapping traces to astraea data structure. 
         Input: trace["data"] and boolean flag to indicate application. Boolean is for identifying unique spans (url is used in tt).
