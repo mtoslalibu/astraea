@@ -97,7 +97,7 @@ class AstraeaControllerEval():
 
             ## parse traces and extract span units
             # trace_parsed = astraeaMan.traces_to_df_asplos_experimental(all_traces["data"],application_name="SocialNetwork")
-            trace_parsed = astraeaMan.traces_to_df_with_self(all_traces["data"],application_name="SocialNetwork")
+            trace_parsed = astraeaMan.traces_to_df_with_self(all_traces["data"],application_name="SocialNetwork", all_enabled=False)
             
             df_traces = trace_parsed[0]
 
