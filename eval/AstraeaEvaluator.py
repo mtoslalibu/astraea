@@ -25,6 +25,7 @@ import os
 import subprocess
 import atexit
 import signal
+import logging
 
 
 pd.set_option('display.max_colwidth', None)
@@ -68,47 +69,47 @@ else:
 
 
 all_spans_list = all_spans.read().split("\n")
-print(all_spans_list)
+logging.debug(all_spans_list)
 
 
-print("***** Welcome to Astraea evaluator!")
+logging.info("***** Welcome to Astraea evaluator!")
 
   
 process = None
 def exit_handler():
-    print('My application is ending!')
+    logging.info('My application is ending!')
     os.killpg(0, signal.SIGKILL)
  
-    print("Killed")
+    logging.warning("Killed")
 
 # Defining main function
 def main():
     atexit.register(exit_handler)
 
-    print("---- Astraea evaluation started! Parameters are a) period: ", period, " b) total: ", totalExpDuration)
+    logging.info("---- Astraea evaluation started! Parameters are a) period: ", period, " b) total: ", totalExpDuration)
 
     ## first make sure sampling policy is revert to default (100 per span)
     cmd_cp = "cp {} {}".format(samplingPolicyDefault, samplingPolicy)
-    print("sampling policy is revert to default: ", cmd_cp)
+    logging.info("sampling policy is revert to default: ", cmd_cp)
     os.system(cmd_cp)
-    print("Check it out ", os.system("head -n 3 {}".format(samplingPolicy)))
+    logging.info("Check it out ", os.system("head -n 3 {}".format(samplingPolicy)))
 
     ## start sending requests
     cmd_wrk = "{}/wrk -D exp -t {} -c {} -d {} -L -s {}/scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose -R {}".format(workloadPath, workers,workers, totalExpDuration+100, workloadPath, qps)
-    print("Sending req in background: ", cmd_wrk)
+    logging.info("Sending req in background: ", cmd_wrk)
     process = subprocess.Popen(cmd_wrk, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     ### Inject problem
     problem_now = random.choice(all_spans_list)
     cmd_inject = "echo {} > {}".format(problem_now,sleepPath)
-    print("Injecting problem: ", cmd_inject)
+    logging.info("Injecting problem: ", cmd_inject)
     os.system(cmd_inject)
-    print("Check content now: ", os.system("head -n 3 {}".format(sleepPath)))
+    logging.info("Check content now: ", os.system("head -n 3 {}".format(sleepPath)))
 
     ## sleep for a bit
     time.sleep(period + 15)
 
-    print("Woke up and running Astraea Controller")
+    logging.info("Woke up and running Astraea Controller")
 
     ## run Astraea and collect stats with problem_now
     astraeaCont = ace.AstraeaControllerEval()
@@ -118,6 +119,7 @@ def main():
 
 # __name__
 if __name__=="__main__":
+    logging.basicConfig(level=logging.INFO)
     os.setpgrp() # create new process group, become its leader
     main()
     # try:

@@ -20,6 +20,7 @@ from kneed import KneeLocator, DataGenerator as dg
 import random
 from configparser import SafeConfigParser
 from collections import deque 
+import logging
 
 
 class TraceManager():
@@ -38,7 +39,7 @@ class TraceManager():
         """
         Method for fetching traces from JAEGER API.  
         """
-        print("------ JAeger api called")
+        logging.info("------ JAeger api called")
 
         # JaegerAPIEndpoint = "http://localhost:16686/api/traces?end={}&maxDuration&minDuration&service={}&start={}&prettyPrint=true"
         
@@ -53,15 +54,15 @@ class TraceManager():
         ## period for lookback
         start = end - int(self.period) * 1000000
 
-        print("start: ", start, " end: ",end)
+        logging.debug("start: ", start, " end: ",end)
 
         formatted_endpoint = str(self.JaegerAPIEndpoint.format(end, service, start)).replace('"','')
-        print("formatted endpiont now: ", formatted_endpoint)
+        logging.debug("formatted endpiont now: ", formatted_endpoint)
 
         response_batch = requests.get(url = formatted_endpoint)
 
         data = response_batch.json()
-        print("# of traces in this batch: ",len(data["data"]))
+        logging.info("# of traces in this batch: ",len(data["data"]))
         return data
 
     def traces_to_df_with_self(self,all_traces_data, application_name = "SocialNetwork", all_enabled = False):
@@ -80,12 +81,12 @@ class TraceManager():
         end_to_end_lats_dict ={} ## traceId, lat
 
         corrupted_traces =0
-        print("traces_to_df_asplos trace len now: " , len(all_traces_data))
+        logging.debug("traces_to_df_asplos trace len now: " , len(all_traces_data))
         for trace in all_traces_data:
             
             G = nx.DiGraph()
             traceID = trace["traceID"]
-            print("Working on TraceID " ,traceID)
+            logging.debug("Working on TraceID " ,traceID)
             span_ids = []
         
             for span in trace["spans"]:
@@ -142,17 +143,17 @@ class TraceManager():
             e2e_lat = 0
             
             if nx.number_of_nodes(G) != nx.number_of_edges(G) + 1:
-                print("mertiko problematic trace",traceID)
+                logging.warning("mertiko problematic trace",traceID)
                 dict_traces.pop(traceID)
                 corrupted_traces += 1
                 continue
             
             for x in G.nodes():
                 if not G.nodes[x]:
-                    print("!!!!!!!! Problem",traceID, 0/0)
+                    logging.warning("!!!!!!!! Problem",traceID, 0/0)
                     
                 span_now = G.nodes[x]['node'].name   
-                print("\n---Main span now: ", span_now, " , duration", G.nodes[x]['node'].latency, " id ", G.nodes[x]['node'].id)
+                logging.debug("\n---Main span now: ", span_now, " , duration", G.nodes[x]['node'].latency, " id ", G.nodes[x]['node'].id)
 
                 ## update immediate parent list if not root!
                 if all_enabled and G.in_degree(x) != 0:
@@ -163,7 +164,7 @@ class TraceManager():
                         self.immediate_parent[span_now] = set()
                     ## add it to set anyway, no repeating is allowed
                     self.immediate_parent[span_now].add(span_parent_name)
-                    print("---Immediate parent updated for ",span_now,  self.immediate_parent[span_now])
+                    logging.debug("---Immediate parent updated for ",span_now,  self.immediate_parent[span_now])
                 
                 if G.in_degree(x) == 0: ## root
                     end_to_end_lats.append(G.nodes[x]['node'].latency)
@@ -179,14 +180,14 @@ class TraceManager():
                             max_estimate = [i for i in estimates_before if i > 0]
                             child_lat_before += np.mean(max_estimate)
 
-                        print("local span update", span_now, G.nodes[x]['node'].latency, G.nodes[x]['node'].latency - child_lat_before, self.concurrent_children[span_now])
+                        logging.debug("local span update", span_now, G.nodes[x]['node'].latency, G.nodes[x]['node'].latency - child_lat_before, self.concurrent_children[span_now])
                         local_span_stats[span_now] = local_span_stats.get(span_now,0) +  max(0,G.nodes[x]['node'].latency - child_lat_before)
                         local_span_count[span_now] = local_span_count.get(span_now,0) + 1
-                        print("***** This leaf used to have child", span_now, " lat: ", G.nodes[x]['node'].latency, " self:" , G.nodes[x]['node'].latency - child_lat_before, " see child ",  self.concurrent_children[span_now])
+                        logging.debug("***** This leaf used to have child", span_now, " lat: ", G.nodes[x]['node'].latency, " self:" , G.nodes[x]['node'].latency - child_lat_before, " see child ",  self.concurrent_children[span_now])
 
                     else: ## this is leaf, and was always a leaf
                         ## sum local observations
-                        print("local span update", span_now, G.nodes[x]['node'].latency)
+                        logging.debug("local span update", span_now, G.nodes[x]['node'].latency)
                         local_span_stats[span_now] = local_span_stats.get(span_now,0) + G.nodes[x]['node'].latency
                         local_span_count[span_now] = local_span_count.get(span_now,0) + 1
                     
@@ -196,7 +197,7 @@ class TraceManager():
                 else: ## intermediate spans
                     ### Hard-coded check for Social Network repeating span.. The root and the very first child are identical so ignore it.
                     if span_now == "/wrk2-api/post/compose":
-                        print("Hard coded for Social Network repeating span")
+                        logging.debug("Hard coded for Social Network repeating span")
                         continue
                     
                     span_child =nx.dfs_successors(G, source=x, depth_limit=1) ## get all immediate children
@@ -213,7 +214,7 @@ class TraceManager():
                         else: ## either always had 1 child, or other children are disabled 
                             
                             child_now  = G.nodes[values[0]]['node'].name
-                            print("-=-= Tek child: ", child_now, " duration: ", G.nodes[values[0]]['node'].latency)
+                            logging.debug("-=-= Tek child: ", child_now, " duration: ", G.nodes[values[0]]['node'].latency)
 
                             ## first time observing parent span!!!, let's update our oracle concurrent_children with single child
                             # child_lat should be extracted later in this code
@@ -222,7 +223,7 @@ class TraceManager():
                                 child_lat = G.nodes[values[0]]['node'].latency ## get current child's latency
                                 self.concurrent_children[span_now][0]["max"].appendleft(child_lat)
 
-                                print("???Added this sppan with one child for first time: ", span_now, self.concurrent_children[span_now])
+                                logging.debug("--=-=-Added this sppan with one child for first time: ", span_now, self.concurrent_children[span_now])
                             
                             else: ## 1 child now but could have other children
                                 child_found_before = False
@@ -235,7 +236,7 @@ class TraceManager():
                                     max_estimate = [i for i in estimates_before if i > 0]
                                     child_lat += np.mean(max_estimate)
 
-                                print("***** This span with one child", span_now, " lat: ", G.nodes[x]['node'].latency, " self:" , G.nodes[x]['node'].latency - child_lat, " see child ",  self.concurrent_children[span_now])
+                                logging.debug("***** This span with one child", span_now, " lat: ", G.nodes[x]['node'].latency, " self:" , G.nodes[x]['node'].latency - child_lat, " see child ",  self.concurrent_children[span_now])
                         
                         ### it has multipl children so more complex analysis; concurrent and sequential breakdown of children for self_segment analysis
                         if child_dict:
@@ -246,8 +247,8 @@ class TraceManager():
                                     estimates_before = item["max"]
                                     max_estimate = [i for i in estimates_before if i > 0]
                                     child_lat += np.mean(max_estimate)
-                                    print("-=-=- Estimating children contribution from previous rounds ",item["children"], np.mean(max_estimate))
-                                print("Done estimation, total contribution is: ", child_lat)
+                                    logging.debug("-=-=- Estimating children contribution from previous rounds ",item["children"], np.mean(max_estimate))
+                                logging.debug("Done estimation, total contribution is: ", child_lat)
 
                             spans_processes = []
                             most_start = 0
@@ -272,7 +273,7 @@ class TraceManager():
                                     ## if we do not have any elements in the list, then set most end
                                     if len(spans_processes) == 0: 
                                         # child_lat = child_lat + (value - most_start) ## value = end_timestamp
-                                        print("*** Check child : ", key, " , duration: ", (value - most_start), ' ,total dur: ' , child_lat)
+                                        logging.debug("*** Check child : ", key, " , duration: ", (value - most_start), ' ,total dur: ' , child_lat)
 
                                         ## if this is the first time for parent span!!!, let's update our oracle_child_map
                                         if span_now not in self.concurrent_children:
@@ -280,7 +281,7 @@ class TraceManager():
                                             self.concurrent_children[span_now][0]["max"].appendleft(value - most_start)
 
                                             child_lat += value - most_start
-                                            print("First time added parent span check children ", self.concurrent_children[span_now])
+                                            logging.debug("First time added parent span check children ", self.concurrent_children[span_now])
                                             parent_seen_first_time = True
 
                                         else:
@@ -289,18 +290,18 @@ class TraceManager():
                                                 obj["max"].appendleft(value - most_start)
                                                 self.concurrent_children[span_now].append(obj)
                                                 child_lat += value - most_start
-                                                print("First/sec time added parent span check children ", self.concurrent_children[span_now])
+                                                logging.debug("First/sec time added parent span check children ", self.concurrent_children[span_now])
 
                                             ## iterate children and see if it is there concurrently!
                                             for item in self.concurrent_children[span_now]:
                                                 ## yes we have some common elements for active children -- so adding to concurrent list
                                                 if not set(active_children).isdisjoint(item["children"]): 
-                                                    print("Yes we have some common elements for active children and previous children from map")
+                                                    logging.debug("Yes we have some common elements for active children and previous children from map")
                                                     # child_found_before = True
                                                     item["max"].appendleft(value - most_start) ## update its latency estimator
                                         most_start = 0
                                         
-                    print("local span update", span_now, G.nodes[x]['node'].latency, G.nodes[x]['node'].latency - child_lat, self.concurrent_children[span_now])
+                    logging.debug("local span update", span_now, G.nodes[x]['node'].latency, G.nodes[x]['node'].latency - child_lat, self.concurrent_children[span_now])
                     local_span_stats[span_now] = local_span_stats.get(span_now,0) + max(0,G.nodes[x]['node'].latency - child_lat)
                     local_span_count[span_now] = local_span_count.get(span_now,0) + 1
 
